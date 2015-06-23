@@ -22,8 +22,8 @@ Try:
 """
 
 import json
-from collections import OrderedDict
 from docopt import docopt
+from collections import OrderedDict
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='V 1.0')
@@ -89,7 +89,6 @@ if __name__ == '__main__':
                 continue
             else:
                 append_input(prefix, 'boolean')
-                print 'boolean'
         elif isinstance(value, list):
             for line in options:
                 if prefix in line and map_any(line, str_type):
