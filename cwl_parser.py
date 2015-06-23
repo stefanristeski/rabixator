@@ -26,7 +26,7 @@ from docopt import docopt
 from collections import OrderedDict
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version='V 1.0')
+    args = docopt(__doc__, version='v1.0.0')
     print(args)
 
     # Load rabix schema
