@@ -1,7 +1,7 @@
 """Rabix Parser
 
 Usage:
-  cwl_parser.py --file=<file> [-b --longboolean --some-int INTEGER --some-float=<float> -s=<string> --some-array=<int>... --enum=<string>]
+  cwl_parser.py --file=<file> [-b --longboolean --some-int INTEGER --some-float=<float> -s=<string> --some-array=<integer>... --enum=<string>]
   cwl_parser.py -h | -v
 
 Options:
@@ -10,10 +10,10 @@ Options:
   --file=<file>                     this is file
   -s --string=<string>              this is string
   -i, --some-int INTEGER            this is int
-  --some-float=<float>              this is float [default: 10.0] #DETAILED DESCRIPTION
+  --some-float=<float>              this is float [default: 10.0]
   -b                                this is boolean
   --longboolean                     this is long boolean
-  --some-array=<int>...             this is list of int [default: 1 2 3] #ARRAY
+  --some-array=<integer>...         this is list of int [default: 1 2 3]
   --enum=<enum>                     this is enum [values: x y c]
 
 Try:
@@ -22,16 +22,49 @@ Try:
 """
 
 import json
-from docopt import docopt
 from collections import OrderedDict
+from docopt import docopt, printable_usage, parse_defaults, parse_pattern, formal_usage
+
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='v1.0.0')
-    print(args)
 
-    # Load rabix schema
-    rabix_schema = json.load(open('./input.json'), object_pairs_hook=OrderedDict)
+    # print(args)
+    # print formal_usage(__doc__)
+    doc = __doc__
+    usage = printable_usage(doc)
+    options = parse_defaults(doc)
+    pattern = parse_pattern(formal_usage(usage), options)
+    # print usage
+    print pattern
+    # print pattern
+
+    rabix_schema = {
+        "id": "",
+        "class": "CommandLineTool",
+        "@context": "https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md",
+        "label": "",
+        "description": "",
+        "owner": ["null"],
+        "contributor": [],
+        "requirements": [
+            {"class": "DockerRequirement", "imgRepo": "", "imgTag": "", "imgId": ""},
+            {"class": "CpuRequirement", "value": 500},
+            {"class": "MemRequirement", "value": 1000}
+        ],
+        "inputs": [],
+        "outputs": [],
+        "baseCommand": [""],
+        "stdin": "",
+        "stdout": "",
+        "argAdapters": [],
+        "sbg:category": []
+    }
+
+    # Load rabix options
     options = __doc__.splitlines()[__doc__.splitlines().index('Options:'):]
+    # Load rabix arguments
+    # options = __doc__.splitlines()[__doc__.splitlines().index('Arguments:'):]
 
     # Variable types
     str_type = ['STRING', 'STR', '<string>', '<str>']
@@ -50,8 +83,8 @@ if __name__ == '__main__':
 
     # Append to rabix input
     def append_input(prefix, var_type):
-        label = ''
-        description = ''
+        label = ""
+        description = ""
 
         for line in options:
             if prefix in line:
@@ -69,7 +102,7 @@ if __name__ == '__main__':
                 "depth": 0,
                 "description": description,
                 "label": label,
-                "sbg:category": "OPTIONS",
+                "sbg:category": "",
                 "schema": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
                 "adapter": {"prefix": prefix, "separate": True}
             }
@@ -117,3 +150,5 @@ if __name__ == '__main__':
     # Write rabix schema to output.json
     with open('output.json', 'w') as out_file:
         json.dump(rabix_schema, out_file, separators=(',', ':'))
+
+
