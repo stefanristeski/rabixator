@@ -1,55 +1,72 @@
 """Rabix Parser
 
 Usage:
-  cwl_parser.py --file=<file> [-b --longboolean --some-int INTEGER --some-float=<float> -s=<string> --some-array=<integer>... --enum=<string>]
+  cwl_parser.py ship new [-b --longboolean --some-int INTEGER --some-float=<float> -s STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] --file=<file> <some-int> <out_file>...
   cwl_parser.py -h | -v
 
 Options:
   -h --help                         show this help message and exit
   -v, --version                     show version and exit
   --file=<file>                     this is file
-  -s --string=<string>              this is string
+  -s STR --string=STR               this is string
   -i, --some-int INTEGER            this is int
-  --some-float=<float>              this is float [default: 10.0]
+                                    second line of description
+  -f --some-float=<float>           this is float [default: 10.0]
   -b                                this is boolean
   --longboolean                     this is long boolean
-  --some-array=<integer>...         this is list of int [default: 1 2 3]
-  --enum=<enum>                     this is enum [values: x y c]
+  --some-array=<integer>            this is list of int [default: 1 2 3]
+                                    second description line
+  --enum=<enum>                     this is enum [values: 10.1 11.1 12.1] [default: 10.1]
+  --other-enum=<enum>               this is enum [default: 10] [values: 10 11 12]
 
-Try:
-  python cwl_parser.py --file file.ext
+Arguments:
+  <out_file>                        this is output FILE [type: file] [default: file.txt]
+  <some-int>                        INTEGER [type: integer]
+  <some_float> float                FLOAT [type: float]
+  <some-enum> enum                  enum [type: enum]
+  <some-str> STRING                 string [type: string]
+                                    second line of string decription
+  <some-array>                      this is array of ints [type: int]
 
 """
 
 import json
+import optdoc
 from collections import OrderedDict
-from docopt import docopt, printable_usage, parse_defaults, parse_pattern, formal_usage
+from docopt import docopt, printable_usage, parse_defaults, formal_usage
 
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version='v1.0.0')
-
-    # print(args)
-    # print formal_usage(__doc__)
     doc = __doc__
+    args = docopt(doc)
+
+    # print 'ARGS \n' + str(args) + '\n'
+
+    # Load options and arguments
+    doc_options, doc_args = optdoc.parse_defaults(doc)
+    print 'OPTIONS \n' + str(doc_options) + '\n'
+    print 'ARGUMENTS \n' + str(doc_args) + '\n'
+
+    # Load list
     usage = printable_usage(doc)
     options = parse_defaults(doc)
-    pattern = parse_pattern(formal_usage(usage), options)
-    # print usage
-    print pattern
-    # print pattern
+    pattern, arg_list, cmd_list = optdoc.parse_pattern(formal_usage(usage), options)
+    print 'LIST OPT/ARGS \n' + str(arg_list)
 
+    print 'CMD \n' + str(cmd_list)
+
+    # CWL shema from sbg platform
     rabix_schema = {
         "id": "",
         "class": "CommandLineTool",
         "@context": "https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md",
         "label": "",
         "description": "",
-        "owner": ["null"],
+        "owner": [],
         "contributor": [],
         "requirements": [
-            {"class": "DockerRequirement", "imgRepo": "", "imgTag": "", "imgId": ""},
-            {"class": "CpuRequirement", "value": 500},
+            {"class": "DockerRequirement", "dockerImageId": "", "dockerPull": ""},
+            {"class": "CPURequirement", "value": 1},
             {"class": "MemRequirement", "value": 1000}
         ],
         "inputs": [],
@@ -58,13 +75,9 @@ if __name__ == '__main__':
         "stdin": "",
         "stdout": "",
         "argAdapters": [],
-        "sbg:category": []
+        "sbg:category": [],
+        "sbg:sbgMaintained": False,
     }
-
-    # Load rabix options
-    options = __doc__.splitlines()[__doc__.splitlines().index('Options:'):]
-    # Load rabix arguments
-    # options = __doc__.splitlines()[__doc__.splitlines().index('Arguments:'):]
 
     # Variable types
     str_type = ['STRING', 'STR', '<string>', '<str>']
@@ -73,25 +86,28 @@ if __name__ == '__main__':
     file_type = ['FILE', '<file>']
     enum_type = ['ENUM', '<enum>']
 
-    # Map any
-    def map_any(line, type):
-        return any(map(lambda t: t in line, type))
-
-    # Map all
-    def map_all(line, type):
-        return all(map(lambda t: t + '...' not in line, type))
-
     # Append to rabix input
-    def append_input(prefix, var_type):
-        label = ""
-        description = ""
+    def append_input(prefix, o, list=False):
+        label = prefix.lower().strip('-').replace('-', '_')
+        description = o.get('description')
+        var_type = o.get('type')
+        if var_type == 'boolean' and not prefix.startswith('--'):
+            label = description.replace(' ', '_')
 
-        for line in options:
-            if prefix in line:
-                label = prefix.lower().strip('-').replace('-', '_')
-                description = line.split('  ')[-1].strip()
-                if var_type == 'boolean' and not prefix.startswith('--'):
-                    label = description
+        if list:
+            if var_type in str_type: var_type = ["null", {"type": "array", "items": {"type": "string"}}]
+            elif var_type in int_type: var_type = ["null", {"type": "array", "items": {"type": "int"}}]
+            elif var_type in float_type: var_type = ["null", {"type": "array", "items": {"type": "float"}}]
+            elif var_type in file_type: var_type = ["null", {"type": "array", "items": {"type": "File"}}]
+        else:
+            if var_type in str_type: var_type = 'string'
+            elif var_type in int_type: var_type = 'int'
+            elif var_type in float_type: var_type = 'float'
+            elif var_type in file_type: var_type = 'File'
+            elif var_type in enum_type:
+                start, end, d = '[values:', ']', o.get('description')
+                var_type = ["null", {"type": "enum", "name": prefix.lower().strip('-'),
+                                     "symbols": d[d.find(start)+len(start):d.find(end, d.find(start))].strip().split(' ')}]
 
         inputs = rabix_schema.get('inputs')
         inputs.append(OrderedDict(
@@ -113,42 +129,23 @@ if __name__ == '__main__':
     # Append to rabix output
     def append_output():
         rabix_schema_outputs = rabix_schema.get('outputs')
-        pass
+
+    def get_prefix(o):
+        return o.get('long') if o.get('long') is not None else o.get('short')
 
     # Iterate over args and options, and call append_input with proper arguments
     for prefix, value in args.iteritems():
-        if isinstance(value, bool):
-            if prefix in ['--version', '--help']:
-                continue
-            else:
-                append_input(prefix, 'boolean')
+        if prefix in ['--version', '--help']:
+            continue
         elif isinstance(value, list):
-            for line in options:
-                if prefix in line and map_any(line, str_type):
-                    append_input(prefix, ["null", {"type": "array", "items": {"type": "string"}}])
-                elif prefix in line and map_any(line, int_type):
-                    append_input(prefix, ["null", {"type": "array", "items": {"type": "int"}}])
-                elif prefix in line and map_any(line, float_type):
-                    append_input(prefix, ["null", {"type": "array", "items": {"type": "float"}}])
-                elif prefix in line and map_any(line, file_type):
-                    append_input(prefix, ["null", {"type": "array", "items": {"type": "File"}}])
+            for o in doc_options:
+                if prefix == get_prefix(o):
+                    append_input(prefix, o, list=True)
         else:
-            for line in options:
-                if prefix in line and map_any(line, str_type) and map_all(line, str_type):
-                    append_input(prefix, 'string')
-                elif prefix in line and map_any(line, int_type) and map_all(line, int_type):
-                    append_input(prefix, 'int')
-                elif prefix in line and map_any(line, float_type) and map_all(line, float_type):
-                    append_input(prefix, 'float')
-                elif prefix in line and map_any(line, file_type) and map_all(line, file_type):
-                    append_input(prefix, 'File')
-                elif prefix in line and map_any(line, enum_type):
-                    value = ["null", {"type": "enum", "name": prefix.lower().strip('-'),
-                                      "symbols": [v for v in line.rsplit('values: ')[-1].strip(']').split(' ')]}]
-                    append_input(prefix, value)
+            for o in doc_options:
+                if prefix == get_prefix(o):
+                    append_input(prefix, o)
 
     # Write rabix schema to output.json
     with open('output.json', 'w') as out_file:
         json.dump(rabix_schema, out_file, separators=(',', ':'))
-
-
