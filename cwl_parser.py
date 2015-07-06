@@ -1,7 +1,7 @@
 """Rabix Parser
 
 Usage:
-  cwl_parser.py ship new [-b --longboolean --some-int INTEGER --some-float=<float> -s STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] --file=<file> <some-int> <out_file>...
+  cwl_parser.py ship new [-b --longboolean --some-int INTEGER --some-float=<float> -s STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] --file=<file> <some-arg-int> <some-arg-file>...
   cwl_parser.py -h | -v
 
 Options:
@@ -20,13 +20,12 @@ Options:
   --other-enum=<enum>               this is enum [default: 10] [values: 10 11 12]
 
 Arguments:
-  <out_file>                        this is output FILE [type: file] [default: file.txt]
-  <some-int>                        INTEGER [type: integer]
-  <some_float> float                FLOAT [type: float]
-  <some-enum> enum                  enum [type: enum]
-  <some-str> STRING                 string [type: string]
+  <some-arg-file>                   this is output FILE [type: file] [default: file.txt]
+  <some-arg-int>                    arg INTEGER [type: integer]
+  <some-arg-float>                  arg FLOAT [type: float]
+  <some-arg-str>                    arg string [type: string]
                                     second line of string decription
-  <some-array>                      this is array of ints [type: int]
+  <some-arg-array>                  arg this is array of ints [type: int]
 
 """
 
@@ -87,43 +86,88 @@ if __name__ == '__main__':
     enum_type = ['ENUM', '<enum>']
 
     # Append to rabix input
-    def append_input(prefix, o, list=False):
-        label = prefix.lower().strip('-').replace('-', '_')
-        description = o.get('description')
-        var_type = o.get('type')
-        if var_type == 'boolean' and not prefix.startswith('--'):
-            label = description.replace(' ', '_')
+    def append_input(o, list=False):
+        if not isinstance(o, str):
+            name = o.get('name', None)
+            prefix = get_prefix(o)
+            label = prefix.lower().strip('-').replace('-', '_') if prefix else name
+            description = o.get('description')
+            var_type = o.get('type')
+            if var_type == 'boolean' and not prefix.startswith('--'):
+                label = description.replace(' ', '_')
 
-        if list:
-            if var_type in str_type: var_type = ["null", {"type": "array", "items": {"type": "string"}}]
-            elif var_type in int_type: var_type = ["null", {"type": "array", "items": {"type": "int"}}]
-            elif var_type in float_type: var_type = ["null", {"type": "array", "items": {"type": "float"}}]
-            elif var_type in file_type: var_type = ["null", {"type": "array", "items": {"type": "File"}}]
+            if list:
+                if var_type in str_type: var_type = ["null", {"type": "array", "items": {"type": "string"}}]
+                elif var_type in int_type: var_type = ["null", {"type": "array", "items": {"type": "int"}}]
+                elif var_type in float_type: var_type = ["null", {"type": "array", "items": {"type": "float"}}]
+                elif var_type in file_type: var_type = ["null", {"type": "array", "items": {"type": "File"}}]
+
+                # elif var_type in enum_type:
+                #     start, end, d = '[values:', ']', o.get('description')
+                #     var_type = ["null", {"type": "enum", "name": name,
+                #                          "symbols": d[d.find(start)+len(start):d.find(end, d.find(start))].strip().split(' ')}]
+
+            else:
+                if var_type in str_type: var_type = 'string'
+                elif var_type in int_type: var_type = 'int'
+                elif var_type in float_type: var_type = 'float'
+                elif var_type in file_type: var_type = 'File'
+                elif var_type in enum_type:
+                    start, end, d = '[values:', ']', description
+                    var_type = ["null", {"type": "enum", "name": prefix.lower().strip('-'),
+                                         "symbols": d[d.find(start)+len(start):d.find(end, d.find(start))].strip().split(' ')}]
+
+            inputs = rabix_schema.get('inputs')
+
+            # In case o is option
+            if o.get('short') or o.get('long'):
+                inputs.append(OrderedDict(
+                    {
+                        "inputBinding": {"prefix": prefix, "separate": True},
+                        "type": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
+                        "id": ''.join(['#', prefix.lower().strip('-').replace('-', '_')]),
+                        "depth": 0,
+                        "description": description,
+                        "label": label,
+                        "sbg:category": "",
+                        # "schema": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
+                        # "adapter": {"prefix": prefix, "separate": True}
+                    }
+                    )
+                )
+            # In case o is argument
+            elif name:
+                inputs.append(OrderedDict(
+                    {
+                        "inputBinding": {"position": 1},
+                        "type": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
+                        "id": ''.join(['#', name.replace('<', '').replace('>', '').replace('-', '_')]),
+                        "depth": 0,
+                        "description": description,
+                        "label": ''.join(['#', name.replace('<', '').replace('>', '').replace('-', '_')]),
+                        "sbg:category": "",
+                        # "schema": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
+                        # "adapter": {"position": 1}
+                    }
+                    )
+                )
+            # In case o is command
         else:
-            if var_type in str_type: var_type = 'string'
-            elif var_type in int_type: var_type = 'int'
-            elif var_type in float_type: var_type = 'float'
-            elif var_type in file_type: var_type = 'File'
-            elif var_type in enum_type:
-                start, end, d = '[values:', ']', o.get('description')
-                var_type = ["null", {"type": "enum", "name": prefix.lower().strip('-'),
-                                     "symbols": d[d.find(start)+len(start):d.find(end, d.find(start))].strip().split(' ')}]
-
-        inputs = rabix_schema.get('inputs')
-        inputs.append(OrderedDict(
-            {
-                "inputBinding": {"prefix": prefix, "separate": True},
-                "type": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
-                "id": ''.join(['#', prefix.lower().strip('-').replace('-', '_')]),
-                "depth": 0,
-                "description": description,
-                "label": label,
-                "sbg:category": "",
-                "schema": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
-                "adapter": {"prefix": prefix, "separate": True}
-            }
+            inputs = rabix_schema.get('inputs')
+            inputs.append(OrderedDict(
+                {
+                    "inputBinding": {"position": 2},
+                    "type": ["null", 'string'],
+                    "id": ''.join(['#', o]),
+                    "depth": 0,
+                    "description": "",
+                    "label": "",
+                    "sbg:category": "",
+                    # "schema": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
+                    # "adapter": {"position": 1}
+                }
+                )
             )
-        )
         rabix_schema['inputs'] = inputs
 
     # Append to rabix output
@@ -134,18 +178,50 @@ if __name__ == '__main__':
         return o.get('long') if o.get('long') is not None else o.get('short')
 
     # Iterate over args and options, and call append_input with proper arguments
-    for prefix, value in args.iteritems():
-        if prefix in ['--version', '--help']:
+    # for prefix, value in args.iteritems():
+    #     if prefix in ['--version', '--help']:
+    #         continue
+    #
+    #     elif isinstance(value, list):
+    #         for o in doc_options:
+    #             if prefix == get_prefix(o):
+    #                 append_input(prefix, o, list=True)
+    #     else:
+    #         for o in doc_options:
+    #             if prefix == get_prefix(o):
+    #                 append_input(prefix, o)
+
+    # Iterate over doc_options and append optional inputs
+    for x, option in enumerate(doc_options):
+        for arg in arg_list:
+            arg_long = arg.get('long')
+            arg_short = arg.get('short')
+            if arg_long and arg_long == option.get('long'):
+                doc_options[x]['list'] = True
+            elif arg_short and arg_short == option.get('short'):
+                doc_options[x]['list'] = True
+        if option.get('long') in ['--version', '--help']:
             continue
-        elif isinstance(value, list):
-            for o in doc_options:
-                if prefix == get_prefix(o):
-                    append_input(prefix, o, list=True)
+        elif option.get('list'):
+            append_input(option, list=True)
         else:
-            for o in doc_options:
-                if prefix == get_prefix(o):
-                    append_input(prefix, o)
+            append_input(option)
+
+    # Iterate over doc_args and append positional arguments on inputs
+    for x, argument in enumerate(doc_args):
+        for arg in arg_list:
+            arg_name = arg.get('name')
+            if arg_name and arg_name == argument.get('name'):
+                doc_args[x]['list'] = True
+        if argument.get('list'):
+            append_input(argument, list=True)
+        else:
+            append_input(argument)
+
+    for x in cmd_list:
+        append_input(x)
 
     # Write rabix schema to output.json
     with open('output.json', 'w') as out_file:
         json.dump(rabix_schema, out_file, separators=(',', ':'))
+

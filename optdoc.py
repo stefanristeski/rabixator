@@ -201,6 +201,7 @@ class Command(Argument):
                     break
         return None, None
 
+position = 0
 
 class Option(ChildPattern):
 
@@ -230,6 +231,7 @@ class Option(ChildPattern):
         if argcount:
             matched = re.findall('\[default: (.*)\]', description, flags=re.I)
             value = matched[0] if matched else None
+
         return {'short': short, 'long': long, 'value': value, 'description': description.strip().replace('\n', ' ').replace('  ', ''), 'type': type}
 
     def single_match(self, left):
@@ -412,6 +414,7 @@ def parse_expr(tokens, options):
         result += [Required(*seq)] if len(seq) > 1 else seq
     return [Either(*result)] if len(result) > 1 else result
 
+# added
 arg_list = []
 cmd_list = []
 
