@@ -15,6 +15,7 @@ Arguments:
 
 Example:
   python cwlparse.py 'python tool.py -h'
+  python cwlparse.py 'python tool.py -h' --out 'bam.bam' --out 'reports[].pdf'
   python cwlparse.py "bamtools sort" --stdout=out.bam --stdin reads --out bam.bam --out="reports[].pdf"
 
 """
