@@ -1,88 +1,107 @@
 """Rabix Parser
 
 Usage:
-  cwl_parser.py ship new [-b --longboolean --some-int INTEGER --some-float=<float> -s STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] --file=<file> <some-arg-int> <some-arg-file>...
-  cwl_parser.py -h | -v
+  cwlparse.py <tool_help_call>...
 
 Options:
-  -h --help                         show this help message and exit
-  -v, --version                     show version and exit
-  --file=<file>                     this is file
-  -s STR --string=STR               this is string
-  -i, --some-int INTEGER            this is int
-                                    second line of description
-  -f --some-float=<float>           this is float [default: 10.0]
-  -b                                this is boolean
-  --longboolean                     this is long boolean
-  --some-array=<integer>            this is list of int [default: 1 2 3]
-                                    second description line
-  --enum=<enum>                     this is enum [values: 10.1 11.1 12.1] [default: 10.1]
-  --other-enum=<enum>               this is enum [default: 10] [values: 10 11 12]
+  -h, --help            print this message and exit
+  -v, --version         print cwl parser version
+  --stdout=<file>
+  --stdin=<file>
 
 Arguments:
-  <some-arg-file>                   this is output FILE [type: file] [default: file.txt]
-  <some-arg-int>                    arg INTEGER [type: integer]
-  <some-arg-float>                  arg FLOAT [type: float]
-  <some-arg-str>                    arg string [type: string]
-                                    second line of string decription
-  <some-arg-array>                  arg this is array of ints [type: int]
+  <tool_help_call>      call tool help inside '', i.e. 'python tool cmd --help'
+
+Example:
+  python cwlparse.py 'python tool.py -h'
+  python cwlparse.py "bamtools sort" --stdout=out.bam --stdin="reads" --out="bam *.bam" --out="reports[] *.pdf"
 
 """
 
 import json
 import optdoc
+from subprocess import check_output
 from collections import OrderedDict
 from docopt import docopt, printable_usage, parse_defaults, formal_usage
 
 
 if __name__ == '__main__':
-    doc = __doc__
-    args = docopt(doc)
-
-    # print 'ARGS \n' + str(args) + '\n'
+    args = docopt(__doc__, help=True, version=1.0)
+    base_command = args.get('<tool_help_call>')[0].split(' ')
+    doc = check_output(base_command)
 
     # Load options and arguments
     doc_options, doc_args = optdoc.parse_defaults(doc)
-    print 'OPTIONS \n' + str(doc_options) + '\n'
-    print 'ARGUMENTS \n' + str(doc_args) + '\n'
 
     # Load list
     usage = printable_usage(doc)
     options = parse_defaults(doc)
     pattern, arg_list, cmd_list = optdoc.parse_pattern(formal_usage(usage), options)
-    print 'LIST OPT/ARGS \n' + str(arg_list)
 
-    print 'CMD \n' + str(cmd_list)
+    # Print args, options, cmds, and lists
+    # print 'ARGS \n' + str(args) + '\n'
+    # print 'OPTIONS \n' + str(doc_options) + '\n'
+    # print 'ARGUMENTS \n' + str(doc_args) + '\n'
+    # print 'LIST OPT/ARGS \n' + str(arg_list)
+    # print 'CMD \n' + str(cmd_list)
 
-    # CWL shema from sbg platform
+    # CWL shema for rabix.org:2222
+    # rabix_schema = {
+    #       "id": "",
+    #       "class": "CommandLineTool",
+    #       "@context": "https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md",
+    #       "label": "",
+    #       "description": "",
+    #       "owner": [],
+    #       "contributor": [],
+    #       "requirements": [
+    #           {"class": "DockerRequirement", "imgRepo": "", "imgTag": "", "imgId": ""},
+    #           {"class": "CpuRequirement", "value": 500},
+    #           {"class": "MemRequirement", "value": 1000}
+    #       ],
+    #       "inputs": [],
+    #       "outputs": [],
+    #       "baseCommand": [""],
+    #       "stdin": "",
+    #       "stdout": "",
+    #       "argAdapters": []
+    # }
+
+    # remove -h/--help from base_command
+    if '-h' in base_command:
+        base_command.remove('-h')
+    elif '--help' in base_command:
+        base_command.remove('--help')
+
+    # CWL shema for sbg platform
     rabix_schema = {
-        "id": "",
-        "class": "CommandLineTool",
-        "@context": "https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md",
-        "label": "",
-        "description": "",
-        "owner": [],
-        "contributor": [],
-        "requirements": [
-            {"class": "DockerRequirement", "dockerImageId": "", "dockerPull": ""},
-            {"class": "CPURequirement", "value": 1},
-            {"class": "MemRequirement", "value": 1000}
+        'id': '',
+        'class': 'CommandLineTool',
+        '@context': 'https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md',
+        'label': '',
+        'description': '',
+        'owner': [],
+        'contributor': [],
+        'requirements': [
+            {'class': 'DockerRequirement', 'dockerImageId': '', 'dockerPull': ''},
+            {'class': 'CPURequirement', 'value': 1},
+            {'class': 'MemRequirement', 'value': 1000}
         ],
-        "inputs": [],
-        "outputs": [],
-        "baseCommand": [""],
-        "stdin": "",
-        "stdout": "",
-        "argAdapters": [],
-        "sbg:category": [],
-        "sbg:sbgMaintained": False,
+        'inputs': [],
+        'outputs': [],
+        'baseCommand': base_command,
+        'stdin': '',
+        'stdout': '',
+        'successCodes': [],
+        'temporaryFailCodes': [],
+        'arguments': []
     }
 
     # Variable types
     str_type = ['STRING', 'STR', '<string>', '<str>']
     int_type = ['INTEGER', 'INT', '<integer>', '<int>']
     float_type = ['FLOAT', '<float>']
-    file_type = ['FILE', '<file>']
+    file_type = ['FILE', '<file>', 'File']
     enum_type = ['ENUM', '<enum>']
 
     # Append to rabix input
@@ -101,11 +120,6 @@ if __name__ == '__main__':
                 elif var_type in int_type: var_type = ["null", {"type": "array", "items": {"type": "int"}}]
                 elif var_type in float_type: var_type = ["null", {"type": "array", "items": {"type": "float"}}]
                 elif var_type in file_type: var_type = ["null", {"type": "array", "items": {"type": "File"}}]
-
-                # elif var_type in enum_type:
-                #     start, end, d = '[values:', ']', o.get('description')
-                #     var_type = ["null", {"type": "enum", "name": name,
-                #                          "symbols": d[d.find(start)+len(start):d.find(end, d.find(start))].strip().split(' ')}]
 
             else:
                 if var_type in str_type: var_type = 'string'
@@ -130,8 +144,6 @@ if __name__ == '__main__':
                         "description": description,
                         "label": label,
                         "sbg:category": "",
-                        # "schema": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
-                        # "adapter": {"prefix": prefix, "separate": True}
                     }
                     )
                 )
@@ -146,12 +158,10 @@ if __name__ == '__main__':
                         "description": description,
                         "label": ''.join(['#', name.replace('<', '').replace('>', '').replace('-', '_')]),
                         "sbg:category": "",
-                        # "schema": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
-                        # "adapter": {"position": 1}
                     }
                     )
                 )
-            # In case o is command
+        # In case o is command
         else:
             inputs = rabix_schema.get('inputs')
             inputs.append(OrderedDict(
@@ -163,8 +173,6 @@ if __name__ == '__main__':
                     "description": "",
                     "label": "",
                     "sbg:category": "",
-                    # "schema": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
-                    # "adapter": {"position": 1}
                 }
                 )
             )
@@ -176,20 +184,6 @@ if __name__ == '__main__':
 
     def get_prefix(o):
         return o.get('long') if o.get('long') is not None else o.get('short')
-
-    # Iterate over args and options, and call append_input with proper arguments
-    # for prefix, value in args.iteritems():
-    #     if prefix in ['--version', '--help']:
-    #         continue
-    #
-    #     elif isinstance(value, list):
-    #         for o in doc_options:
-    #             if prefix == get_prefix(o):
-    #                 append_input(prefix, o, list=True)
-    #     else:
-    #         for o in doc_options:
-    #             if prefix == get_prefix(o):
-    #                 append_input(prefix, o)
 
     # Iterate over doc_options and append optional inputs
     for x, option in enumerate(doc_options):
@@ -218,10 +212,10 @@ if __name__ == '__main__':
         else:
             append_input(argument)
 
+    # Iterate over cmd_list and append commands
     for x in cmd_list:
         append_input(x)
 
-    # Write rabix schema to output.json
+    # Write cwl schema to output.json
     with open('output.json', 'w') as out_file:
         json.dump(rabix_schema, out_file, separators=(',', ':'))
-
