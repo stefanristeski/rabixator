@@ -1,20 +1,21 @@
 """Rabix Parser
 
 Usage:
-  cwlparse.py <tool_help_call>...
+  cwlparse.py <tool_help_call>... --out=<file_extension>...
 
 Options:
-  -h, --help            print this message and exit
-  -v, --version         print cwl parser version
-  --stdout=<file>
-  --stdin=<file>
+  -h, --help                print this message and exit
+  -v, --version             print cwl parser version
+  --stdout=<file>           reference the output file(s)
+  --stdin=<file>            reference the input files(s)
+  --out=<file_extension>    define output file and extension
 
 Arguments:
-  <tool_help_call>      call tool help inside '', i.e. 'python tool cmd --help'
+  <tool_help_call>      call tool help inside '', e.g. 'python tool cmd --help'
 
 Example:
   python cwlparse.py 'python tool.py -h'
-  python cwlparse.py "bamtools sort" --stdout=out.bam --stdin="reads" --out="bam *.bam" --out="reports[] *.pdf"
+  python cwlparse.py "bamtools sort" --stdout=out.bam --stdin reads --out bam.bam --out="reports[].pdf"
 
 """
 
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     pattern, arg_list, cmd_list = optdoc.parse_pattern(formal_usage(usage), options)
 
     # Print args, options, cmds, and lists
-    # print 'ARGS \n' + str(args) + '\n'
+    print 'ARGS \n' + str(args) + '\n'
     # print 'OPTIONS \n' + str(doc_options) + '\n'
     # print 'ARGUMENTS \n' + str(doc_args) + '\n'
     # print 'LIST OPT/ARGS \n' + str(arg_list)
@@ -179,8 +180,16 @@ if __name__ == '__main__':
         rabix_schema['inputs'] = inputs
 
     # Append to rabix output
-    def append_output():
-        rabix_schema_outputs = rabix_schema.get('outputs')
+    def append_output(output, list=False):
+        outputs = rabix_schema.get('outputs')
+        outputs.append(
+            {
+                "outputBinding": {"glob": ''.join(['*.', output[1]])},
+                "type": ["null", {"type": "array", "items": {"type": "File"}}] if list else ["null", "File"],
+                "id": ''.join(['#', output[0].lower().replace('-', '_').replace('[', '').replace(']', '')]),
+            }
+        )
+        rabix_schema['outputs'] = outputs
 
     def get_prefix(o):
         return o.get('long') if o.get('long') is not None else o.get('short')
@@ -215,6 +224,15 @@ if __name__ == '__main__':
     # Iterate over cmd_list and append commands
     for x in cmd_list:
         append_input(x)
+
+    # Iterate over out and append outputs
+    for output in args.get('--out'):
+        output = output.split('.')
+        print output
+        if '[]' in output:
+            append_output(output, list=True)
+        else:
+            append_output(output)
 
     # Write cwl schema to output.json
     with open('output.json', 'w') as out_file:
