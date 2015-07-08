@@ -245,7 +245,6 @@ if __name__ == '__main__':
 
     # position inputs
     for x, id in enumerate(ids):
-        print x,id
         for y, inp in enumerate(rabix_schema.get('inputs')):
             if inp['id'] == id:
                 rabix_schema['inputs'][y]['inputBinding'].update({'position': x})
