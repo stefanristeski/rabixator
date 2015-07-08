@@ -1,7 +1,7 @@
 """Rabix Parser
 
 Usage:
-  cwlparse.py <tool_help_call>... [--out=<file_name.extension>...] [--stdin=<arg_name>]
+  cwlparse.py <tool_help_call>... [--out=<file_name.extension>... --stdin=<arg_name> --stdout=<file_name>]
 
 Options:
   -h, --help                print this message and exit
@@ -236,6 +236,9 @@ if __name__ == '__main__':
         for x, inp in enumerate(rabix_schema.get('inputs')):
             if inp.get('id') == '#' + args.get('--stdin').replace('<', '').replace('>', '').replace('-', '_'):
                 rabix_schema['inputs'][x]['inputBinding'] = {"stdin": True}
+
+    if args.get('--stdout'):
+        rabix_schema['stdout'] = args.get('--stdout')
 
     # Write cwl schema to output.json
     with open('output.json', 'w') as out_file:
