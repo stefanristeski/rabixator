@@ -47,6 +47,12 @@ if __name__ == '__main__':
     # print 'LIST OPT/ARGS \n' + str(arg_list)
     # print 'CMD \n' + str(cmd_list)
 
+    # remove -h/--help from base_command
+    if '-h' in base_command:
+        base_command.remove('-h')
+    elif '--help' in base_command:
+        base_command.remove('--help')
+
     # CWL shema for rabix.org:2222
     # rabix_schema = {
     #       "id": "",
@@ -68,12 +74,6 @@ if __name__ == '__main__':
     #       "stdout": "",
     #       "argAdapters": []
     # }
-
-    # remove -h/--help from base_command
-    if '-h' in base_command:
-        base_command.remove('-h')
-    elif '--help' in base_command:
-        base_command.remove('--help')
 
     # CWL shema for sbg platform
     rabix_schema = {
@@ -229,8 +229,7 @@ if __name__ == '__main__':
     # Iterate over out and append outputs
     for output in args.get('--out'):
         output = output.split('.')
-        print output
-        if '[]' in output:
+        if '[]' in output[0]:
             append_output(output, list=True)
         else:
             append_output(output)
