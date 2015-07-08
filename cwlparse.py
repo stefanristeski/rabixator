@@ -1,7 +1,7 @@
 """Rabix Parser
 
 Usage:
-  cwlparse.py <tool_help_call>... --out=<file_extension>...
+  cwlparse.py <tool_help_call>... [--out=<file_extension>...]
 
 Options:
   -h, --help                print this message and exit
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     pattern, arg_list, cmd_list = optdoc.parse_pattern(formal_usage(usage), options)
 
     # Print args, options, cmds, and lists
-    print 'ARGS \n' + str(args) + '\n'
+    # print 'ARGS \n' + str(args) + '\n'
     # print 'OPTIONS \n' + str(doc_options) + '\n'
     # print 'ARGUMENTS \n' + str(doc_args) + '\n'
     # print 'LIST OPT/ARGS \n' + str(arg_list)
