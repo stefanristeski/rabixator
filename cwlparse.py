@@ -1,7 +1,7 @@
 """Rabix Parser
 
 Usage:
-  cwlparse.py <tool_help_call>... [--out=<file_name.extension>... --stdin=<arg_name> --stdout=<file_name>]
+  cwlparse.py <tool_help_call> [--stdin=<arg_name> --stdout=<file_name> --out=<file_name.extension>... ]
 
 Options:
   -h, --help                print this message and exit
@@ -16,7 +16,7 @@ Arguments:
 Example:
   python cwlparse.py 'python tool.py -h'
   python cwlparse.py 'python tool.py -h' --out='bam.bam' --out='reports[].pdf'
-  python cwlparse.py 'bamtools sort' --stdout='out.bam' --stdin='<reads>' --out='bam.bam' --out='reports[].pdf'
+  python cwlparse.py 'python tool.py -h' --stdout='out.bam' --stdin='<arg-some_file>' --out='bam.bam' --out='reports[].pdf'
 
 """
 
@@ -29,7 +29,7 @@ from docopt import docopt, printable_usage, parse_defaults, formal_usage
 
 if __name__ == '__main__':
     args = docopt(__doc__, help=True, version=1.0)
-    base_command = args.get('<tool_help_call>')[0].split(' ')
+    base_command = args.get('<tool_help_call>').split(' ')
     doc = check_output(base_command)
 
     # Load options and arguments
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     # }
 
     # CWL shema for sbg platform
-    rabix_schema = {
+    rabix_schema = OrderedDict({
         'id': '',
         'class': 'CommandLineTool',
         '@context': 'https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md',
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         'successCodes': [],
         'temporaryFailCodes': [],
         'arguments': []
-    }
+    })
 
     # Variable types
     str_type = ['STRING', 'STR', '<string>', '<str>']
