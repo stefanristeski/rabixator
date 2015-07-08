@@ -38,7 +38,9 @@ if __name__ == '__main__':
     # Load list
     usage = printable_usage(doc)
     options = parse_defaults(doc)
-    pattern, arg_list, cmd_list = optdoc.parse_pattern(formal_usage(usage), options)
+    pattern, arg_list, cmd_list, ids = optdoc.parse_pattern(formal_usage(usage), options)
+
+    #print pattern
 
     # Print args, options, cmds, and lists
     # print 'ARGS \n' + str(args) + '\n'
@@ -100,11 +102,11 @@ if __name__ == '__main__':
     })
 
     # Variable types
-    str_type = ['STRING', 'STR', '<string>', '<str>']
-    int_type = ['INTEGER', 'INT', '<integer>', '<int>']
-    float_type = ['FLOAT', '<float>']
+    str_type = ['STRING', 'STR', '<string>', '<str>', 'str']
+    int_type = ['INTEGER', 'INT', '<integer>', '<int>', 'int']
+    float_type = ['FLOAT', '<float>', 'float']
     file_type = ['FILE', '<file>', 'File']
-    enum_type = ['ENUM', '<enum>']
+    enum_type = ['ENUM', '<enum>', 'enum']
 
     # Append to rabix input
     def append_input(o, list=False):
@@ -152,7 +154,7 @@ if __name__ == '__main__':
             elif name:
                 inputs.append(OrderedDict(
                     {
-                        "inputBinding": {"position": 1},
+                        "inputBinding": {},
                         "type": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
                         "id": ''.join(['#', name.replace('<', '').replace('>', '').replace('-', '_')]),
                         "description": description,
@@ -166,7 +168,7 @@ if __name__ == '__main__':
             inputs = rabix_schema.get('inputs')
             inputs.append(OrderedDict(
                 {
-                    "inputBinding": {"position": 2},
+                    "inputBinding": {},
                     "type": ["null", 'string'],
                     "id": ''.join(['#', o]),
                     "description": "",
@@ -237,9 +239,20 @@ if __name__ == '__main__':
             if inp.get('id') == '#' + args.get('--stdin').replace('<', '').replace('>', '').replace('-', '_'):
                 rabix_schema['inputs'][x]['inputBinding'] = {"stdin": True}
 
+    # make std out
     if args.get('--stdout'):
         rabix_schema['stdout'] = args.get('--stdout')
+
+    # position inputs
+    for x, id in enumerate(ids):
+        print x,id
+        for y, inp in enumerate(rabix_schema.get('inputs')):
+            if inp['id'] == id:
+                rabix_schema['inputs'][y]['inputBinding'].update({'position': x})
 
     # Write cwl schema to output.json
     with open('output.json', 'w') as out_file:
         json.dump(rabix_schema, out_file, separators=(',', ':'))
+
+
+

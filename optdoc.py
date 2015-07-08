@@ -392,14 +392,18 @@ def parse_shorts(tokens, options):
         parsed.append(o)
     return parsed
 
-
 def parse_pattern(source, options):
     tokens = TokenStream(re.sub(r'([\[\]\(\)\|]|\.\.\.)', r' \1 ', source),
                          DocoptLanguageError)
+    token_list = re.sub(r'([\[\]\(\)\|]|\.\.\.)', r' \1 ', source).split(' ')
+    remove_list = ['(', ')', '[', ']', '...', '', '|']
+    arguments = filter(lambda a: a not in remove_list and not a.isupper(), token_list)
+    ids = [x.split('=', 1)[0].lower().replace('--', '').replace('-', '_').replace('<', '').replace('>', '') for x in arguments]
+    ids = ['#'+x.replace('_', '') if x.startswith('_') else '#'+x for x in ids]
     result = parse_expr(tokens, options)
     if tokens.current() is not None:
         raise tokens.error('unexpected ending: %r' % ' '.join(tokens))
-    return Required(*result), arg_list, cmd_list
+    return Required(*result), arg_list, cmd_list, ids
 
 
 def parse_expr(tokens, options):
@@ -426,6 +430,7 @@ def parse_seq(tokens, options):
         atom = parse_atom(tokens, options)
         if tokens.current() == '...':
             arg_list.append(atom[0].__dict__)
+            print arg_list
             atom = [OneOrMore(*atom)]
             tokens.move()
         result += atom

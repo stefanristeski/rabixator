@@ -1,8 +1,7 @@
 """Foo bar tool
 
 Usage:
-  tool.py create new [-b --longboolean --some-int INTEGER --some-float=<float> -s STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] --file=<file> <arg-some_file> <some-arg-int> <some-arg-file>...
-  tool.py -h | -v
+  tool.py create new [-b --longboolean --some-int INTEGER --some-float=<float> --string STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] --file=<file> <arg-some_file>... <arg_some-array>... [<arg-some-int> <arg-float-some> <arg-str-some>]
 
 Options:
   -h --help                         show this help message and exit
