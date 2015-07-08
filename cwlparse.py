@@ -1,7 +1,7 @@
 """Rabix Parser
 
 Usage:
-  cwlparse.py <tool_help_call>... [--out=<file_extension>...]
+  cwlparse.py <tool_help_call>... [--out=<file_name.extension>...] [--stdin=<arg_name>]
 
 Options:
   -h, --help                print this message and exit
@@ -15,8 +15,8 @@ Arguments:
 
 Example:
   python cwlparse.py 'python tool.py -h'
-  python cwlparse.py 'python tool.py -h' --out 'bam.bam' --out 'reports[].pdf'
-  python cwlparse.py "bamtools sort" --stdout=out.bam --stdin reads --out bam.bam --out="reports[].pdf"
+  python cwlparse.py 'python tool.py -h' --out='bam.bam' --out='reports[].pdf'
+  python cwlparse.py 'bamtools sort' --stdout='out.bam' --stdin='<reads>' --out='bam.bam' --out='reports[].pdf'
 
 """
 
@@ -142,7 +142,6 @@ if __name__ == '__main__':
                         "inputBinding": {"prefix": prefix, "separate": True},
                         "type": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
                         "id": ''.join(['#', prefix.lower().strip('-').replace('-', '_')]),
-                        "depth": 0,
                         "description": description,
                         "label": label,
                         "sbg:category": "",
@@ -156,7 +155,6 @@ if __name__ == '__main__':
                         "inputBinding": {"position": 1},
                         "type": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
                         "id": ''.join(['#', name.replace('<', '').replace('>', '').replace('-', '_')]),
-                        "depth": 0,
                         "description": description,
                         "label": ''.join(['#', name.replace('<', '').replace('>', '').replace('-', '_')]),
                         "sbg:category": "",
@@ -171,7 +169,6 @@ if __name__ == '__main__':
                     "inputBinding": {"position": 2},
                     "type": ["null", 'string'],
                     "id": ''.join(['#', o]),
-                    "depth": 0,
                     "description": "",
                     "label": "",
                     "sbg:category": "",
@@ -233,6 +230,12 @@ if __name__ == '__main__':
             append_output(output, list=True)
         else:
             append_output(output)
+
+    # make stdin from argument
+    if args.get('--stdin'):
+        for x, inp in enumerate(rabix_schema.get('inputs')):
+            if inp.get('id') == '#' + args.get('--stdin').replace('<', '').replace('>', '').replace('-', '_'):
+                rabix_schema['inputs'][x]['inputBinding'] = {"stdin": True}
 
     # Write cwl schema to output.json
     with open('output.json', 'w') as out_file:
