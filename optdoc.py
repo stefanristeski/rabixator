@@ -166,7 +166,7 @@ class Argument(ChildPattern):
         value = re.findall('\[default: (.*)\]', source, flags=re.I)
 
         #  added
-        description = ' '.join(filter(lambda x: x != '', source.split('  ')[1:])).strip().replace('\n', '')
+        description = ' '.join(filter(lambda x: x != '', source.split('  ')[1:])).strip().split('\n\n', 1)[0].replace('\n', '')
         start, end, d = '[type:', ']', description
         types = d[d.find(start)+len(start):d.find(end, d.find(start))].strip().split(' ')
 
@@ -232,7 +232,7 @@ class Option(ChildPattern):
             matched = re.findall('\[default: (.*)\]', description, flags=re.I)
             value = matched[0] if matched else None
 
-        return {'short': short, 'long': long, 'value': value, 'description': description.strip().replace('\n', ' ').replace('  ', ''), 'type': type}
+        return {'short': short, 'long': long, 'value': value, 'description': description.strip().split('\n\n', 1)[0].replace('\n', ' ').replace('  ', ''), 'type': type}
 
     def single_match(self, left):
         for n, p in enumerate(left):
@@ -398,12 +398,26 @@ def parse_pattern(source, options):
     token_list = re.sub(r'([\[\]\(\)\|]|\.\.\.)', r' \1 ', source).split(' ')
     remove_list = ['(', ')', '[', ']', '...', '', '|']
     arguments = filter(lambda a: a not in remove_list and not a.isupper(), token_list)
-    ids = [x.split('=', 1)[0].lower().replace('--', '').replace('-', '_').replace('<', '').replace('>', '') for x in arguments]
+
+    # refactor this
+    ids = []
+    for x in arguments:
+        if x.startswith('-') and x[1] != '-':
+            for y in x:
+                if y != '-':
+                    ids.append('-'+y)
+        else:
+            ids.append(x)
+
+    ids = [x.split('=', 1)[0].lower().replace('--', '').replace('-', '_').replace('<', '').replace('>', '') for x in ids]
     ids = ['#'+x.replace('_', '') if x.startswith('_') else '#'+x for x in ids]
+    # refactor this
+
     result = parse_expr(tokens, options)
     if tokens.current() is not None:
         raise tokens.error('unexpected ending: %r' % ' '.join(tokens))
     return Required(*result), arg_list, cmd_list, ids
+    return Required(*result)
 
 
 def parse_expr(tokens, options):
@@ -418,9 +432,10 @@ def parse_expr(tokens, options):
         result += [Required(*seq)] if len(seq) > 1 else seq
     return [Either(*result)] if len(result) > 1 else result
 
-# added
+# arg and cmd_list
 arg_list = []
 cmd_list = []
+# arg and cmd_list
 
 def parse_seq(tokens, options):
     """seq ::= ( atom [ '...' ] )* ;"""
@@ -429,8 +444,9 @@ def parse_seq(tokens, options):
     while tokens.current() not in [None, ']', ')', '|']:
         atom = parse_atom(tokens, options)
         if tokens.current() == '...':
+            # append to arg list
             arg_list.append(atom[0].__dict__)
-            print arg_list
+            # append to arg list
             atom = [OneOrMore(*atom)]
             tokens.move()
         result += atom

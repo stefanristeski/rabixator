@@ -11,7 +11,7 @@ Options:
   --out=<file_extension>    define output file and extension
 
 Arguments:
-  <tool_help_call>      call tool help inside '', e.g. 'python tool cmd --help'
+  <tool_help_call>          call tool help inside '', e.g. 'python tool cmd --help'
 
 Example:
   python cwlparse.py 'python tool.py -h'
@@ -40,8 +40,7 @@ if __name__ == '__main__':
     options = parse_defaults(doc)
     pattern, arg_list, cmd_list, ids = optdoc.parse_pattern(formal_usage(usage), options)
 
-    #print pattern
-
+    # print pattern
     # Print args, options, cmds, and lists
     # print 'ARGS \n' + str(args) + '\n'
     # print 'OPTIONS \n' + str(doc_options) + '\n'
@@ -55,29 +54,7 @@ if __name__ == '__main__':
     elif '--help' in base_command:
         base_command.remove('--help')
 
-    # CWL shema for rabix.org:2222
-    # rabix_schema = {
-    #       "id": "",
-    #       "class": "CommandLineTool",
-    #       "@context": "https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md",
-    #       "label": "",
-    #       "description": "",
-    #       "owner": [],
-    #       "contributor": [],
-    #       "requirements": [
-    #           {"class": "DockerRequirement", "imgRepo": "", "imgTag": "", "imgId": ""},
-    #           {"class": "CpuRequirement", "value": 500},
-    #           {"class": "MemRequirement", "value": 1000}
-    #       ],
-    #       "inputs": [],
-    #       "outputs": [],
-    #       "baseCommand": [""],
-    #       "stdin": "",
-    #       "stdout": "",
-    #       "argAdapters": []
-    # }
-
-    # CWL shema for sbg platform
+    # CWL shema
     rabix_schema = OrderedDict({
         'id': '',
         'class': 'CommandLineTool',
@@ -252,6 +229,3 @@ if __name__ == '__main__':
     # Write cwl schema to output.json
     with open('output.json', 'w') as out_file:
         json.dump(rabix_schema, out_file, separators=(',', ':'))
-
-
-
