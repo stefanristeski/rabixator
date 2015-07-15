@@ -226,6 +226,14 @@ if __name__ == '__main__':
             if inp['id'] == id:
                 rabix_schema['inputs'][y]['inputBinding'].update({'position': x})
 
+    for x, id in enumerate(ids):
+        if len(id) == 2:
+            for y, o in enumerate(doc_options):
+                if id.replace('#', '-') == doc_options[y].get('short') and doc_options[y].get('long'):
+                    for z, inp in enumerate(rabix_schema.get('inputs')):
+                        if inp['id'] == doc_options[y].get('long').replace('--', '#'):
+                            rabix_schema['inputs'][z]['inputBinding'].update({'position': x})
+
     # Write cwl schema to output.json
     with open('output.json', 'w') as out_file:
         json.dump(rabix_schema, out_file, separators=(',', ':'))

@@ -18,10 +18,10 @@ Options:
   -s STR --string=STR               this is string
   -i, --some-int INTEGER            this is int
                                     second line of description
-  -f FLOAT                          this is float [default: 10.0]
+  -f FLOAT, --float FLOAT           this is float [default: 10.0]
   -b                                this is boolean
   --longboolean                     this is longboolean
-  -a --longa                        this is short and long a bool
+  -a, --longa                       this is short and long a bool
   -c                                this is short c bool
   -d                                this is short d bool
   --some-array=<integer>            this is list of int [default: 1 2 3]
