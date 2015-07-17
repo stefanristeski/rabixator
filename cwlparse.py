@@ -1,22 +1,20 @@
 """Rabix Parser
 
 Usage:
-  cwlparse.py <tool_help_call> [--stdin=<arg_name> --stdout=<file_name> --out=<file_name.extension>... ]
+  cwlparse.py <tool_help_call> [--stdout=<file_name> --out=<file_name.extension>...]
 
 Options:
   -h, --help                print this message and exit
   -v, --version             print cwl parser version
   --stdout=<file>           reference the output file(s)
-  --stdin=<file>            reference the input files(s)
   --out=<file_extension>    define output file and extension
 
 Arguments:
-  <tool_help_call>          call tool help inside '', e.g. 'python tool cmd --help'
+  <tool_help_call>          call tool help inside '', e.g. 'python tool_path cmd --help'
 
 Example:
   python cwlparse.py 'python tool.py -h'
-  python cwlparse.py 'python tool.py -h' --out='bam.bam' --out='reports[].pdf'
-  python cwlparse.py 'python tool.py -h' --stdout='out.bam' --stdin='<arg-some_file>' --out='bam.bam' --out='reports[].pdf'
+  python cwlparse.py 'python tool.py -h' --stdout='out.bam' --out='bam.bam' --out='reports[].pdf'
 
 """
 
@@ -96,13 +94,11 @@ if __name__ == '__main__':
             var_type = o.get('type')
             if var_type == 'boolean' and not prefix.startswith('--'):
                 label = description.replace(' ', '_')
-
             if list:
                 if var_type in str_type: var_type = ["null", {"type": "array", "items": {"type": "string"}}]
                 elif var_type in int_type: var_type = ["null", {"type": "array", "items": {"type": "int"}}]
                 elif var_type in float_type: var_type = ["null", {"type": "array", "items": {"type": "float"}}]
                 elif var_type in file_type: var_type = ["null", {"type": "array", "items": {"type": "File"}}]
-
             else:
                 if var_type in str_type: var_type = 'string'
                 elif var_type in int_type: var_type = 'int'
@@ -150,8 +146,8 @@ if __name__ == '__main__':
                     "inputBinding": {},
                     "type": ["null", 'string'],
                     "id": ''.join(['#', o]),
-                    "description": "",
-                    "label": "",
+                    "description": ''.join(['This is ', o, ' command.', " Type it's name if you want to use it"]),
+                    "label": o,
                     "sbg:category": "",
                 }
                 )
@@ -218,12 +214,6 @@ if __name__ == '__main__':
             append_output(output, list=True)
         else:
             append_output(output)
-
-    # make stdin from argument
-    if args.get('--stdin'):
-        for x, inp in enumerate(rabix_schema.get('inputs')):
-            if inp.get('id') == '#' + replace(args.get('--stdin', [('<', ''), ('>', ''), ('-', '_')])):
-                rabix_schema['inputs'][x]['inputBinding'] = {"stdin": True}
 
     # make std out
     if args.get('--stdout'):
