@@ -20,6 +20,7 @@ Example:
 
 """
 
+import re
 import json
 import optdoc
 from subprocess import check_output
@@ -129,13 +130,14 @@ if __name__ == '__main__':
                 )
             # In case o is argument
             elif name:
+                name = replace(name, [('<', ''), ('>', ''), ('-', '_')])
                 inputs.append(OrderedDict(
                     {
                         "inputBinding": {},
                         "type": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
-                        "id": ''.join(['#', name.replace('<', '').replace('>', '').replace('-', '_')]),
+                        "id": ''.join(['#', name]),
                         "description": description,
-                        "label": ''.join(['#', name.replace('<', '').replace('>', '').replace('-', '_')]),
+                        "label": ''.join(['#', name]),
                         "sbg:category": "",
                     }
                     )
@@ -163,13 +165,20 @@ if __name__ == '__main__':
             {
                 "outputBinding": {"glob": ''.join(['*.', output[1]])},
                 "type": ["null", {"type": "array", "items": {"type": "File"}}] if list else ["null", "File"],
-                "id": ''.join(['#', output[0].lower().replace('-', '_').replace('[', '').replace(']', '')]),
+                "id": ''.join(['#', replace(output[0].lower(), [('-', '_'), ('[', ''), (']', '')])]),
             }
         )
         rabix_schema['outputs'] = outputs
 
+    # get prefix
     def get_prefix(o):
         return o.get('long') if o.get('long') is not None else o.get('short')
+
+    # string replace
+    def replace(string, tupple_list):
+        for t in tupple_list:
+            string = string.replace(t[0], t[1])
+        return string
 
     # Iterate over doc_options and append optional inputs
     for x, option in enumerate(doc_options):
@@ -213,7 +222,7 @@ if __name__ == '__main__':
     # make stdin from argument
     if args.get('--stdin'):
         for x, inp in enumerate(rabix_schema.get('inputs')):
-            if inp.get('id') == '#' + args.get('--stdin').replace('<', '').replace('>', '').replace('-', '_'):
+            if inp.get('id') == '#' + replace(args.get('--stdin', [('<', ''), ('>', ''), ('-', '_')])):
                 rabix_schema['inputs'][x]['inputBinding'] = {"stdin": True}
 
     # make std out
@@ -225,7 +234,6 @@ if __name__ == '__main__':
         for y, inp in enumerate(rabix_schema.get('inputs')):
             if inp['id'] == id:
                 rabix_schema['inputs'][y]['inputBinding'].update({'position': x})
-
     for x, id in enumerate(ids):
         if len(id) == 2:
             for y, o in enumerate(doc_options):
@@ -233,6 +241,17 @@ if __name__ == '__main__':
                     for z, inp in enumerate(rabix_schema.get('inputs')):
                         if inp['id'] == doc_options[y].get('long').replace('--', '#'):
                             rabix_schema['inputs'][z]['inputBinding'].update({'position': x})
+
+    # make inputs required
+    req = re.sub(r'\[.*?\]', '', usage)
+    req = re.sub(r'\(.*?\)', '', req)
+    req = [x for x in req.split(' ') if x and (x.startswith('-') or x.startswith('<'))]
+    req = [replace(x.split('=')[0], [('--', ''), ('...', ''), ('<', ''), ('>', ''), ('-', '_')]) for x in req]
+    req = ['#'+x if not x.startswith('_') else '#'+x.split('_')[1] for x in req]
+    for id in req:
+        for y, inp in enumerate(rabix_schema.get('inputs')):
+            if inp['id'] == id:
+                rabix_schema['inputs'][y]['type'].remove('null')
 
     # Write cwl schema to output.json
     with open('output.json', 'w') as out_file:

@@ -417,7 +417,7 @@ def parse_pattern(source, options):
     if tokens.current() is not None:
         raise tokens.error('unexpected ending: %r' % ' '.join(tokens))
     return Required(*result), arg_list, cmd_list, ids
-    return Required(*result)
+    # return Required(*result)
 
 
 def parse_expr(tokens, options):

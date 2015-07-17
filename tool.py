@@ -1,7 +1,7 @@
 """Foo bar tool
 
 Usage:
-  tool.py create [-abcdf FLOAT] [--longboolean --some-int INTEGER --string STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] new --file=<file> <arg-some_file> <arg_some-array>... [<arg-some-int> <arg-float-some> <arg-str-some>]
+  tool.py create [-abcdf FLOAT] [--longboolean --some-int INTEGER --string STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] new --input-file=<file> -x STR <arg-some_file> <arg_some-array>... [<arg-some-int> <arg-float-some> <arg-str-some>]
 
 Arguments:
   <arg-some_file>                   arg FILE output [type: file] [default: file.txt]
@@ -14,7 +14,7 @@ Arguments:
 Options:
   -h --help                         show this help message and exit
   -v, --version                     show version and exit
-  --file=<file>                     this is file
+  --input-file=<file>               this is input file
   -s STR --string=STR               this is string
   -i, --some-int INTEGER            this is int
                                     second line of description
@@ -28,6 +28,7 @@ Options:
                                     second description line
   --enum=<enum>                     this is enum [values: 10.1 11.1 12.1] [default: 10.1]
   --other-enum=<enum>               this is enum [default: 10] [values: 10 11 12]
+  -x STR
 
 """
 from docopt import docopt
