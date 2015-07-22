@@ -1,0 +1,790 @@
+[
+  {
+    "schema": {
+      "inputs": [
+        {
+          "_extra": {}, 
+          "_order": 0, 
+          "description": "Reference sequence to which to align the reads.", 
+          "id": "reference", 
+          "list": false, 
+          "name": "FASTA Reference", 
+          "required": true, 
+          "types": [
+            "fasta"
+          ]
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 1, 
+          "description": "Read sequence (or the first mate of a paired end read).", 
+          "id": "read", 
+          "list": true, 
+          "name": "Read sequence", 
+          "required": true, 
+          "types": [
+            "fastq"
+          ]
+        }
+      ], 
+      "outputs": [
+        {
+          "_extra": {}, 
+          "_order": 2, 
+          "description": "Aligned sequence in SAM/BAM/Sorted BAM format.", 
+          "id": "aligned", 
+          "list": true, 
+          "name": "Aligned SAM/BAM/Sorted BAM", 
+          "required": false, 
+          "types": [
+            "sam", 
+            "bam"
+          ]
+        }
+      ], 
+      "params": [
+        {
+          "_extra": {
+            "arg": "-k"
+          }, 
+          "_order": 3, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": 19, 
+          "description": "Matches shorter than INT will be missed. The alignment speed is usually insensitive to this value unless it significantly deviates 20. [default: 19]", 
+          "id": "min_seed", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Minimum seed length", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-w"
+          }, 
+          "_order": 4, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": 100, 
+          "description": "Band width in the banded alignment [default: 100]", 
+          "id": "bandwidth", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Band width for banded alignment", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-d"
+          }, 
+          "_order": 5, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": 100, 
+          "description": "Stop extension when the difference between the best and the current extension score is above |i-j|*A+INT, where i and j are the current positions of the query and reference, respectively, and A is the matching score. Z-dropoff not only avoids unnecessary extension, but also reduces poor alignments inside a long good alignment. [default: 100]", 
+          "id": "dropoff", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Off-diagonal X-dropoff", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-r"
+          }, 
+          "_order": 6, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": 1.5, 
+          "description": " This is a key heuristic parameter for tuning the performance. Larger value yields fewer seeds, which leads to faster alignment speed but lower accuracy. [default: 1.5]", 
+          "id": "trigger_reseeding", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Trigger re-seeding for a MEM longer than minSeedLen*FLOAT", 
+          "required": false, 
+          "step": null, 
+          "type": "float"
+        }, 
+        {
+          "_extra": {
+            "arg": "-c"
+          }, 
+          "_order": 7, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": 500, 
+          "description": "Discard a MEM if it has more than INT occurence in the genome. This is an insensitive parameter. [default: 500]", 
+          "id": "threshold_occurences", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Skip seeds with more than INT occurrences", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-D"
+          }, 
+          "_order": 8, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": 0.5, 
+          "description": "Drop chains shorter than FLOAT fraction of the longest overlapping chain.", 
+          "id": "chain_drop", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Drop chain fraction", 
+          "required": false, 
+          "step": null, 
+          "type": "float"
+        }, 
+        {
+          "_extra": {
+            "arg": "-W"
+          }, 
+          "_order": 9, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": 0, 
+          "description": "Discard a chain if seeded bases shorter than INT.", 
+          "id": "chain_discard", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Drop chain length", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-m"
+          }, 
+          "_order": 10, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": 50, 
+          "description": "Perform at most INT rounds of mate rescues for each read.", 
+          "id": "mate_rescues", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Mate rescue rounds", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-S"
+          }, 
+          "_order": 11, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": false, 
+          "description": "Skip mate rescue", 
+          "id": "skip_mate_rescue", 
+          "list": false, 
+          "name": "Skip mate rescue", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {
+            "arg": "-P"
+          }, 
+          "_order": 12, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": false, 
+          "description": "In the paired-end mode, perform SW to rescue missing hits only but do not try to find hits that fit a proper pair.", 
+          "id": "skip_mate_pairing", 
+          "list": false, 
+          "name": "Skip pairing; mate rescue performed unless -S also in use", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {
+            "arg": "-e"
+          }, 
+          "_order": 13, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": false, 
+          "description": "Discard full-length exact matches", 
+          "id": "exact_matches", 
+          "list": false, 
+          "name": "Discard exact matches", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {
+            "arg": "-A"
+          }, 
+          "_order": 14, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 1, 
+          "description": "Score for a sequence match. [default: 1]", 
+          "id": "match_score", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Score for a sequence match", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-B"
+          }, 
+          "_order": 15, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 4, 
+          "description": "Penalty for a mismatch. [default: 4]", 
+          "id": "mismatch_penalty", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Penalty for a mismatch", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-O"
+          }, 
+          "_order": 16, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 6, 
+          "description": "Gap open penalty for deletions [default: 6]", 
+          "id": "gap_open_penalty_deletion", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Gap open penalty for deletions", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-O"
+          }, 
+          "_order": 17, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 6, 
+          "description": "ap open penalty for insertions [default: 6]", 
+          "id": "gap_open_penalty_insertion", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Gap open penalty for insertions", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-E"
+          }, 
+          "_order": 18, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 1, 
+          "description": "Gap extension penalty for deletion. A gap of length k costs O + k*E (i.e. -O is for opening a zero-length gap). [default: 1]", 
+          "id": "gap_extension_penalty_deletion", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Gap extension penalty for deletion", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-E"
+          }, 
+          "_order": 19, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 1, 
+          "description": "Gap extension penalty for insertion. A gap of length k costs O + k*E (i.e. -O is for opening a zero-length gap). [default: 1]", 
+          "id": "gap_extension_penalty_insertion", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Gap extension penalty for insertion", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-L"
+          }, 
+          "_order": 20, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 5, 
+          "description": "When performing SW extension, BWA-MEM keeps track of the best score reaching the end of query. If this score is larger than the best SW score minus the clipping penalty, clipping will not be applied. Note that in this case, the SAM AS tag reports the best SW score; clipping penalty is not deducted. [default: 5]", 
+          "id": "clipping_penalty_5_end", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Penalty for 5'-end clipping", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-L"
+          }, 
+          "_order": 21, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 5, 
+          "description": "When performing SW extension, BWA-MEM keeps track of the best score reaching the end of query. If this score is larger than the best SW score minus the clipping penalty, clipping will not be applied. Note that in this case, the SAM AS tag reports the best SW score; clipping penalty is not deducted. [default: 5]", 
+          "id": "clipping_penalty_3_end", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Penalty for 3'-end clipping", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-U"
+          }, 
+          "_order": 22, 
+          "category": "Penalties options", 
+          "condition": null, 
+          "default": 17, 
+          "description": "BWA-MEM scores an unpaired read pair as scoreRead1+scoreRead2-INT and scores a paired as scoreRead1+scoreRead2-insertPenalty. It compares these two scores to determine whether we should force pairing. [default: 17]", 
+          "id": "unpaired_penalty", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Penalty for an unpaired read pair", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-x"
+          }, 
+          "_order": 23, 
+          "category": "Algorithm options", 
+          "condition": null, 
+          "default": "None", 
+          "description": "Read type. Setting -x changes multiple parameters unless overridden [null].pacbio: -k17 -W40 -c1000 -r10 -A2 -B5 -O2 -E1 -L0pbread: -k13 -W40 -c1000 -r10 -A2 -B5 -O2 -E1 -N25 -FeaD.001", 
+          "id": "read_type", 
+          "list": false, 
+          "name": "Read type", 
+          "required": false, 
+          "type": "enum", 
+          "values": [
+            [
+              "None", 
+              "None", 
+              "None"
+            ], 
+            [
+              "pacbio", 
+              "Pacbio", 
+              "Pacbio"
+            ], 
+            [
+              "pbread", 
+              "Pbread", 
+              "Pbread"
+            ]
+          ]
+        }, 
+        {
+          "_extra": {
+            "arg": "-p"
+          }, 
+          "_order": 24, 
+          "category": "Input/output options", 
+          "condition": null, 
+          "default": false, 
+          "description": "Assume the first input query file is interleaved paired-end FASTA/Q. See the command description for details.", 
+          "id": "interleaved", 
+          "list": false, 
+          "name": "First query file consists of interleaved paired-end sequences", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {
+            "arg": "-h"
+          }, 
+          "_order": 25, 
+          "category": "Input/output options", 
+          "condition": null, 
+          "default": 5, 
+          "description": "If #hits < INT, output all in the XA tag", 
+          "id": "xa_tag", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "XA tag", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 26, 
+          "category": "Read group options", 
+          "condition": null, 
+          "default": null, 
+          "description": "Specify the read group in a format like '@RG\\tID:foo\\tSM:bar'. This value takes precedence over per-attribute parameters. [default: constructed from per-attribute parameters or inferred from metadata]", 
+          "id": "rg_tag", 
+          "list": false, 
+          "name": "Complete read group header line", 
+          "pattern": null, 
+          "required": false, 
+          "type": "string"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 27, 
+          "category": "Read group options", 
+          "condition": null, 
+          "default": null, 
+          "description": "Specify the sequencing technology for RG line. [default: inferred from metadata]", 
+          "id": "rg_seq_tech", 
+          "list": false, 
+          "name": "Sequencing technology", 
+          "required": false, 
+          "type": "enum", 
+          "values": [
+            [
+              "454", 
+              "454", 
+              "454"
+            ], 
+            [
+              "Helicos", 
+              "Helicos", 
+              "Helicos"
+            ], 
+            [
+              "Illumina", 
+              "Illumina", 
+              "Illumina"
+            ], 
+            [
+              "Solid", 
+              "Solid", 
+              "Solid"
+            ], 
+            [
+              "IonTorrent", 
+              "Iontorrent", 
+              "Iontorrent"
+            ]
+          ]
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 28, 
+          "category": "Read group options", 
+          "condition": null, 
+          "default": null, 
+          "description": "Specify the sample ID for RG line. [default: inferred from metadata]", 
+          "id": "rg_sample", 
+          "list": false, 
+          "name": "Sample", 
+          "pattern": null, 
+          "required": false, 
+          "type": "string"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 29, 
+          "category": "Read group options", 
+          "condition": null, 
+          "default": null, 
+          "description": "Specify the library for RG line. [default: inferred from metadata]", 
+          "id": "rg_library", 
+          "list": false, 
+          "name": "Library", 
+          "pattern": null, 
+          "required": false, 
+          "type": "string"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 30, 
+          "category": "Read group options", 
+          "condition": null, 
+          "default": null, 
+          "description": "Specify the platform unit (lane/slide) for RG line. [default: inferred from metadata]", 
+          "id": "rg_platform_unit", 
+          "list": false, 
+          "name": "Platform unit", 
+          "pattern": null, 
+          "required": false, 
+          "type": "string"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 31, 
+          "category": "Read group options", 
+          "condition": null, 
+          "default": null, 
+          "description": "Specify the sequencing center for RG line.", 
+          "id": "rg_seq_center", 
+          "list": false, 
+          "name": "Sequencing center", 
+          "pattern": null, 
+          "required": false, 
+          "type": "string"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 32, 
+          "category": "Read group options", 
+          "condition": null, 
+          "default": null, 
+          "description": "Specify the median fragment length for RG line.", 
+          "id": "rg_mfl", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Median fragment length", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-T"
+          }, 
+          "_order": 33, 
+          "category": "Input/output options", 
+          "condition": null, 
+          "default": 30, 
+          "description": "Minimum score to output [default: 30]", 
+          "id": "score_threshold", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Score threshold", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {
+            "arg": "-a"
+          }, 
+          "_order": 34, 
+          "category": "Input/output options", 
+          "condition": null, 
+          "default": false, 
+          "description": "Output all found alignments for single-end or unpaired paired-end reads. These alignments will be flagged as secondary alignments.", 
+          "id": "out_all", 
+          "list": false, 
+          "name": "Output all alignments for SE or unpaired PE", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {
+            "arg": "-C"
+          }, 
+          "_order": 35, 
+          "category": "Input/output options", 
+          "condition": null, 
+          "default": false, 
+          "description": "This option can be used to transfer read meta information (e.g. barcode) to the SAM output. Note that the FASTA/Q comment (the string after a space in the header line) must conform the SAM spec (e.g. BC:Z:CGTAC). Malformated comments lead to incorrect SAM output.", 
+          "id": "append_meta", 
+          "list": false, 
+          "name": "Append append FASTA/Q comment to SAM output", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {
+            "arg": "-H"
+          }, 
+          "_order": 36, 
+          "category": "Input/output options", 
+          "condition": null, 
+          "default": false, 
+          "description": ".", 
+          "id": "soft_clip", 
+          "list": false, 
+          "name": "Use soft clipping for supplementary alignments.", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {
+            "arg": "-M"
+          }, 
+          "_order": 37, 
+          "category": "Input/output options", 
+          "condition": null, 
+          "default": true, 
+          "description": "Mark shorter split hits as secondary (for Picard compatibility).", 
+          "id": "mark_short", 
+          "list": false, 
+          "name": "Mark shorter split hits as secondary.", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 38, 
+          "category": "Advanced options", 
+          "condition": null, 
+          "default": false, 
+          "description": "Set to true if high memory instance should be used.", 
+          "id": "wgs", 
+          "list": false, 
+          "name": "High memory", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 39, 
+          "category": "Advanced options", 
+          "condition": null, 
+          "default": "Sorted BAM", 
+          "description": "Select format to output. Sorted BAM option will output coordinate sorted BAM.", 
+          "id": "bam_output", 
+          "list": false, 
+          "name": "Output format", 
+          "required": false, 
+          "type": "enum", 
+          "values": [
+            [
+              "SAM", 
+              "SAM", 
+              "SAM"
+            ], 
+            [
+              "BAM", 
+              "BAM", 
+              "BAM"
+            ], 
+            [
+              "Sorted BAM", 
+              "Sorted bam", 
+              "Sorted bam"
+            ]
+          ]
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 40, 
+          "category": "Advanced options", 
+          "condition": null, 
+          "default": true, 
+          "description": "Set to true to filter out secondary alignments. Works only with output format set to BAM or Sorted BAM", 
+          "id": "filter_sec", 
+          "list": false, 
+          "name": "Filter out secondary alignments", 
+          "required": false, 
+          "type": "boolean"
+        }, 
+        {
+          "_extra": {
+            "arg": "-r"
+          }, 
+          "_order": 41, 
+          "category": "Advanced options", 
+          "condition": null, 
+          "default": "None", 
+          "description": "Remove duplicates reads from all output files. Implies: Exclude reads marked as duplicates from discordant, splitter, and/or unmapped file.", 
+          "id": "remove_dups", 
+          "list": false, 
+          "name": "Duplication", 
+          "required": false, 
+          "type": "enum", 
+          "values": [
+            [
+              "None", 
+              "None", 
+              "None"
+            ], 
+            [
+              "Mark Duplicates", 
+              "Mark duplicates", 
+              "Mark duplicates"
+            ], 
+            [
+              "Remove duplicates", 
+              "Remove duplicates", 
+              "Remove duplicates"
+            ]
+          ]
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 42, 
+          "category": "Advanced options", 
+          "condition": null, 
+          "default": 0, 
+          "description": "If set to zero, auto-detect best algorithm, else set desired value. [default: 0]", 
+          "id": "gigs", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Sorter - number of GBs", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }, 
+        {
+          "_extra": {}, 
+          "_order": 43, 
+          "category": "Advanced options", 
+          "condition": null, 
+          "default": 150, 
+          "description": "Files larger than this value will be split, into this sized chunks for alignment.This number is considered for compressed (.gz) files. For uncompressed files a 3x larger value will be taken. This value is in GB.", 
+          "id": "split_gigs", 
+          "list": false, 
+          "max": null, 
+          "min": null, 
+          "name": "Split files larger than GB", 
+          "required": false, 
+          "step": null, 
+          "type": "integer"
+        }
+      ]
+    }, 
+    "wrapper_id": "sbg_bwa.bwamem.wrapper.BwaMem"
+  }
+]
