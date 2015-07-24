@@ -1,39 +1,6 @@
 import json
 from path import path
 
-# CWL shema
-rabix_schema = {
-    'id': '',
-    'class': 'CommandLineTool',
-    '@context': 'https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md',
-    'label': '',
-    'description': '',
-    'owner': [],
-    'contributor': [],
-    'requirements': [
-        {'class': 'DockerRequirement', 'dockerImageId': '', 'dockerPull': ''},
-        {'class': 'CPURequirement', 'value': 1},
-        {'class': 'MemRequirement', 'value': 1000}
-    ],
-    'inputs': [],
-    'outputs': [],
-    'baseCommand': '',
-    'stdin': '',
-    'stdout': '',
-    'successCodes': [],
-    'temporaryFailCodes': [],
-    'arguments': []
-}
-
-
-sbdk_schema = json.load(open('./gatk2.json'))[0]
-sbdk_schema_inputs = sbdk_schema.get('schema').get('inputs')
-sbdk_schema_params = sbdk_schema.get('schema').get('params')
-sbdk_schema_outputs = sbdk_schema.get('schema').get('outputs')
-wrapper = path(sbdk_schema.get('wrapper_id')).ext[1:]
-
-required = []
-
 # def name_to_id(name):
 #     input_id = [
 #         c.replace(',', '_').replace(' ', '_').replace('-', '_').replace('.', '').replace('\'', '').replace('"', '')
@@ -107,6 +74,9 @@ def append_param(param):
     if param.get('list') is True:
         param_type = {"type": "array", "items": param_type}
 
+    if param.get('type') == 'enum' and param.get('list') is True:
+        param_type = {"type": "enum", "name": param.get('id'), "symbols": [v[0] for v in param.get('values')]}
+
     # add '.' and 'default' to description
     description = param.get('description')
     if description and not description.endswith('.'):
@@ -127,38 +97,69 @@ def append_param(param):
     )
     rabix_schema['inputs'] = inputs
 
+if __name__ == '__main__':
+    for schema in json.load(open('./schema.json')):
 
-# Iterate over sbdk schema inputs and call append_input
-for order, input in enumerate(sbdk_schema_inputs):
-    if input.get('_extra').get('arg') is None:
-        prefix = raw_input('Enter prefix for Input ' + ''.join(
-            ['{id: "', input['id'], '", name: "', input['name'], '", description: "', input['description'], '"}:']))
-    else:
-        prefix = input.get('_extra').get('arg')
-    if input.get('required') is True:
-        required.append(input.get('id'))
-    append_input(input)
+        # CWL shema
+        rabix_schema = {
+            'id': '',
+            'class': 'CommandLineTool',
+            '@context': 'https://github.com/common-workflow-language/common-workflow-language/blob/draft-1/specification/tool-description.md',
+            'label': '',
+            'description': '',
+            'owner': [],
+            'contributor': [],
+            'requirements': [
+                {'class': 'DockerRequirement', 'dockerImageId': '', 'dockerPull': ''},
+                {'class': 'CPURequirement', 'value': 1},
+                {'class': 'MemRequirement', 'value': 1000}
+            ],
+            'inputs': [],
+            'outputs': [],
+            'baseCommand': '',
+            'stdin': '',
+            'stdout': '',
+            'successCodes': [],
+            'temporaryFailCodes': [],
+            'arguments': []
+        }
 
-# Iterate over sbdk schema outputs and call append_output
-for order, output in enumerate(sbdk_schema_outputs):
-    if output.get('required') is True:
-        required.append(output.get('id'))
-    append_output(output)
+        required = []
+        sbdk_schema = schema
+        sbdk_schema_inputs = sbdk_schema.get('schema').get('inputs')
+        sbdk_schema_params = sbdk_schema.get('schema').get('params')
+        sbdk_schema_outputs = sbdk_schema.get('schema').get('outputs')
+        wrapper = path(sbdk_schema.get('wrapper_id')).ext[1:]
+        print sbdk_schema.get('wrapper_id')
 
+        # Iterate over sbdk schema inputs and call append_input
+        for order, input in enumerate(sbdk_schema_inputs):
+            if input.get('_extra').get('arg') is None:
+                prefix = raw_input('Enter prefix for Input ' + ''.join(
+                    ['{id: "', input['id'], '", name: "', input['name'], '", description: "', input['description'], '"}:']))
+            else:
+                prefix = input.get('_extra').get('arg')
+            if input.get('required') is True:
+                required.append(input.get('id'))
+            append_input(input)
 
-# Iterate over sbdk schema params and call append_input
-for order, param in enumerate(sbdk_schema_params):
-    if param.get('_extra').get('arg') is None:
-        prefix = raw_input('Enter prefix for Param ' + ''.join(
-            ['{id: "', param['id'], '", name: ', param['name'], '", description: "', param['description'], '"}:']))
-    else:
-        prefix = param.get('_extra').get('arg')
+        # Iterate over sbdk schema outputs and call append_output
+        for order, output in enumerate(sbdk_schema_outputs):
+            if output.get('required') is True:
+                required.append(output.get('id'))
+            append_output(output)
 
-    if param.get('required') is True:
-        required.append(param.get('id'))
+        # Iterate over sbdk schema params and call append_input
+        for order, param in enumerate(sbdk_schema_params):
+            if param.get('_extra').get('arg') is None:
+                prefix = raw_input('Enter prefix for Param ' + ''.join(
+                    ['{id: "', param['id'], '", name: ', param['name'], '", description: "', param['description'], '"}:']))
+            else:
+                prefix = param.get('_extra').get('arg')
+            if param.get('required') is True:
+                required.append(param.get('id'))
+            append_param(param)
 
-    append_param(param)
-
-# Dump rabix_schema to output.json
-with open('output.json', 'w') as out_file:
-    json.dump(rabix_schema, out_file, separators=(',', ':'))
+        # Dump rabix_schema to output.json
+        with open(wrapper+'.json', 'w') as out_file:
+            json.dump(rabix_schema, out_file, separators=(',', ':'))
