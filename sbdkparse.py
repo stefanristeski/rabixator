@@ -1,4 +1,5 @@
 import json
+from path import path
 
 # CWL shema
 rabix_schema = {
@@ -24,19 +25,21 @@ rabix_schema = {
     'arguments': []
 }
 
-sbdk_schema = json.load(open('./schema.json'))[0]
+
+sbdk_schema = json.load(open('./gatk2.json'))[0]
 sbdk_schema_inputs = sbdk_schema.get('schema').get('inputs')
 sbdk_schema_params = sbdk_schema.get('schema').get('params')
 sbdk_schema_outputs = sbdk_schema.get('schema').get('outputs')
+wrapper = path(sbdk_schema.get('wrapper_id')).ext[1:]
 
 required = []
 
+# def name_to_id(name):
+#     input_id = [
+#         c.replace(',', '_').replace(' ', '_').replace('-', '_').replace('.', '').replace('\'', '').replace('"', '')
+#         for c in name.lower()]
+#     return ''.join(input_id)
 
-def name_to_id(name):
-    input_id = [
-        c.replace(',', '_').replace(' ', '_').replace('-', '_').replace('.', '').replace('\'', '').replace('"', '')
-        for c in name.lower()]
-    return ''.join(input_id)
 
 # Append input
 def append_input(input):
@@ -45,18 +48,24 @@ def append_input(input):
     else:
         input_type = "File"
 
+    # append '.' to description
+    description = input.get('description')
+    if description and not description.endswith('.'):
+        description = ''.join([description, '.'])
+
     inputs = rabix_schema.get('inputs')
     inputs.append(
         {
             "inputBinding": {"prefix": prefix, "separate": True, "itemSeparator": " "},
             "type": [input_type] if input.get('id') in required else ["null", input_type],
             "id": ''.join(['#', input.get('id')]),
-            "description": input.get('description'),
+            "description": description.capitalize() if description else "",
             "label": input.get('name'),
-            "sbg:category": input.get('category'),
+            "sbg:category": "Inputs",
         }
     )
     rabix_schema['inputs'] = inputs
+
 
 # Append output
 def append_output(output):
@@ -64,14 +73,23 @@ def append_output(output):
         output_type = {"type": "array", "items": "File"}
     else:
         output_type = "File"
+
+    # append '.' to description
+    description = input.get('description')
+    if description and not description.endswith('.'):
+        description = ''.join([description, '.'])
+
     outputs = rabix_schema.get('outputs')
     outputs.append(
         {
             "type": [output_type] if output.get('id') in required else ["null", output_type],
             "id": ''.join(['#', output.get('id')]),
+            "description": description.capitalize() if description else "",
+            "label": input.get('name'),
         }
     )
     rabix_schema['outputs'] = outputs
+
 
 # Append param
 def append_param(param):
@@ -89,19 +107,25 @@ def append_param(param):
     if param.get('list') is True:
         param_type = {"type": "array", "items": param_type}
 
+    # add '.' and 'default' to description
+    description = param.get('description')
+    if description and not description.endswith('.'):
+        description = ''.join([description, '.'])
+    if description and param.get('default'):
+        description = ' '.join([description, ' [default: ', str(param.get('default')), ']'])
+
     inputs = rabix_schema.get('inputs')
     inputs.append(
         {
             "inputBinding": {"prefix": prefix, "separate": True, "itemSeparator": " ",  "sbg:cmdInclude": True},
             "type": [param_type] if param.get('id') in required else ["null", param_type],
             "id": ''.join(['#', param.get('id')]),
-            "description": param.get('description'),
+            "description": description.capitalize() if description else "",
             "label": param.get('name'),
             "sbg:category": param.get('category'),
         }
     )
     rabix_schema['inputs'] = inputs
-
 
 
 # Iterate over sbdk schema inputs and call append_input
