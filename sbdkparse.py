@@ -1,5 +1,22 @@
+"""
+
+Usage:
+    sbdkparse.py [-j FILE | --json FILE]
+    sbdkparse.py [-h | -v]
+
+Options:
+    -j, --json FILE             Json input file
+    -h, --help                  Print this message and exit
+    -v, --version               Print version and exit
+
+Example:
+    python sbdkparse.py --json schema.json
+
+"""
+
 import json
 from path import path
+from docopt import docopt
 
 # def name_to_id(name):
 #     input_id = [
@@ -102,7 +119,10 @@ def append_param(param):
     rabix_schema['inputs'] = inputs
 
 if __name__ == '__main__':
-    for schema in json.load(open('./gatk3.json')):
+    args = docopt(__doc__, version=1.0)
+    schema = args.get('json', 'schema.json')
+
+    for schema in json.load(open(schema)):
 
         # CWL shema
         rabix_schema = {
@@ -166,5 +186,5 @@ if __name__ == '__main__':
             append_param(param)
 
         # Dump rabix_schema to output.json
-        with open(wrapper+'.json', 'w') as out_file:
+        with open(wrapper+'CWL.json', 'w') as out_file:
             json.dump(rabix_schema, out_file, separators=(',', ':'))
