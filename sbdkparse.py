@@ -60,7 +60,11 @@ def append_output(output):
 
 # Append param
 def append_param(param):
-    if param.get('type') == 'string':
+    if param.get('type') == 'struct':
+        print ''.join(['\n', 'PARAM IS STRUCT. PLEASE ADD IT MANUALLY!',
+                       ' - {id: "', param['id'], '", name: "', param['name'], '"}', '\n'])
+        return
+    elif param.get('type') == 'string':
         param_type = 'string'
     elif param.get('type') == 'enum':
         param_type = {"type": "enum", "name": param.get('id'), "symbols": [v[0] for v in param.get('values')]}
@@ -98,7 +102,7 @@ def append_param(param):
     rabix_schema['inputs'] = inputs
 
 if __name__ == '__main__':
-    for schema in json.load(open('./schema.json')):
+    for schema in json.load(open('./gatk3.json')):
 
         # CWL shema
         rabix_schema = {
@@ -130,7 +134,8 @@ if __name__ == '__main__':
         sbdk_schema_params = sbdk_schema.get('schema').get('params')
         sbdk_schema_outputs = sbdk_schema.get('schema').get('outputs')
         wrapper = path(sbdk_schema.get('wrapper_id')).ext[1:]
-        print sbdk_schema.get('wrapper_id')
+
+        print sbdk_schema.get('wrapper_id').upper()
 
         # Iterate over sbdk schema inputs and call append_input
         for order, input in enumerate(sbdk_schema_inputs):
