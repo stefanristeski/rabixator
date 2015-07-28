@@ -1,11 +1,11 @@
-"""
+"""Parse sbdk1 wrappers to sbdk2
 
 Usage:
     sbdkparse.py [-j FILE | --json FILE]
     sbdkparse.py [-h | -v]
 
 Options:
-    -j, --json FILE             Json input file
+    -j, --json FILE             Parse this json file [default: schema.json]
     -h, --help                  Print this message and exit
     -v, --version               Print version and exit
 
@@ -120,7 +120,7 @@ def append_param(param):
 
 if __name__ == '__main__':
     args = docopt(__doc__, version=1.0)
-    schema = args.get('json', 'schema.json')
+    schema = args.get('--json')
 
     for schema in json.load(open(schema)):
 
