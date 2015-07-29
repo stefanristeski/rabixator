@@ -153,15 +153,15 @@ if __name__ == '__main__':
         sbdk_schema_inputs = sbdk_schema.get('schema').get('inputs')
         sbdk_schema_params = sbdk_schema.get('schema').get('params')
         sbdk_schema_outputs = sbdk_schema.get('schema').get('outputs')
-        wrapper = path(sbdk_schema.get('wrapper_id')).ext[1:]
+        wrapper = sbdk_schema.get('wrapper_id')
 
-        print sbdk_schema.get('wrapper_id').upper()
+        print wrapper.upper()
 
         # Iterate over sbdk schema inputs and call append_input
         for order, input in enumerate(sbdk_schema_inputs):
             if input.get('_extra').get('arg') is None:
                 prefix = raw_input('Enter prefix for Input ' + ''.join(
-                    ['{id: "', input['id'], '", name: "', input['name'], '", description: "', input['description'], '"}:']))
+                    ['{id: "', input['id'], '", name: "', input['name'], '"}:']))
             else:
                 prefix = input.get('_extra').get('arg')
             if input.get('required') is True:
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         for order, param in enumerate(sbdk_schema_params):
             if param.get('_extra').get('arg') is None:
                 prefix = raw_input('Enter prefix for Param ' + ''.join(
-                    ['{id: "', param['id'], '", name: ', param['name'], '", description: "', param['description'], '"}:']))
+                    ['{id: "', param['id'], '", name: "', param['name'], '"}:']))
             else:
                 prefix = param.get('_extra').get('arg')
             if param.get('required') is True:
@@ -186,5 +186,5 @@ if __name__ == '__main__':
             append_param(param)
 
         # Dump rabix_schema to output.json
-        with open(wrapper+'CWL.json', 'w') as out_file:
+        with open('.'.join([wrapper, 'CWL.json']), 'w') as out_file:
             json.dump(rabix_schema, out_file, separators=(',', ':'))
