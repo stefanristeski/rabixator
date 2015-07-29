@@ -4,6 +4,7 @@ git clone https://github.com/sbg/repo_name.git
 cd repo_name
 from __init__.py choose wrapper you want to parse, comment(#) others.
 sbg sh
+cd /sbgenomics
 pip install .
 nano /usr/local/lib/python2.7/dist-packages/sbgsdk/schema/attrdef.py
 delete  "if k[0] != '_'" on the last line of code, and save changed python file.

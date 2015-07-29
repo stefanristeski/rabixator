@@ -15,7 +15,6 @@ Example:
 """
 
 import json
-from path import path
 from docopt import docopt
 
 # def name_to_id(name):
