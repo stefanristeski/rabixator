@@ -5,12 +5,12 @@ Usage:
     sbdkparse.py [-h | -v]
 
 Options:
-    -j, --json FILE             Parse this json file [default: schema.json]
+    -j, --json FILE             Parse this json file [default: in_schema.json]
     -h, --help                  Print this message and exit
     -v, --version               Print version and exit
 
 Example:
-    python sbdkparse.py --json schema.json
+    python sbdkparse.py --json in_schema.json
 
 """
 
@@ -152,9 +152,9 @@ if __name__ == '__main__':
         sbdk_schema_inputs = sbdk_schema.get('schema').get('inputs')
         sbdk_schema_params = sbdk_schema.get('schema').get('params')
         sbdk_schema_outputs = sbdk_schema.get('schema').get('outputs')
-        wrapper = sbdk_schema.get('wrapper_id')
+        wrapper = sbdk_schema.get('wrapper_id').split('.')
 
-        print wrapper.upper()
+        print '.'.join(wrapper).upper()
 
         # Iterate over sbdk schema inputs and call append_input
         for order, input in enumerate(sbdk_schema_inputs):
@@ -185,5 +185,5 @@ if __name__ == '__main__':
             append_param(param)
 
         # Dump rabix_schema to output.json
-        with open('.'.join([wrapper, 'CWL.json']), 'w') as out_file:
+        with open('.'.join([wrapper[0], wrapper[-1], 'cwl.json']), 'w') as out_file:
             json.dump(rabix_schema, out_file, separators=(',', ':'))
