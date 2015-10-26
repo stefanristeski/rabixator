@@ -1,7 +1,7 @@
 """Rabix Parser
 
 Usage:
-    cwlparse.py (<tool_help_call> | --file=<file>) [--stdout=<file_name> --out=<file_name.extension>... --del_prefix=<dash>]
+    rabixator.py (<tool_help_call> | --file=<file>) [--stdout=<file_name> --out=<file_name.extension>... --del_prefix=<dash>]
 
 Arguments:
     <tool_help_call>                Tool help call inside single quotes, e.g. 'python tool.py [cmd] --help'.
@@ -31,9 +31,9 @@ Options:
     -v, --version                   Print cwl parser version.
 
 Examples:
-    python cwlparse.py --file=path_to_help_file
-    python cwlparse.py 'python tool.py -h' --del_prefix='--'
-    python cwlparse.py 'python tool.py -h' --stdout='aligned_bam.bam' --out='sorted_bam.bam' --out='reports[].pdf'
+    python rabixator.py --file=path_to_help_file
+    python rabixator.py 'python tool.py -h' --del_prefix='--'
+    python rabixator.py 'python tool.py -h' --stdout='aligned_bam.bam' --out='sorted_bam.bam' --out='reports[].pdf'
 """
 
 import re
