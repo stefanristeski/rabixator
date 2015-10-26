@@ -203,6 +203,7 @@ class Command(Argument):
 
 position = 0
 
+
 class Option(ChildPattern):
 
     def __init__(self, short=None, long=None, argcount=0, value=False):
@@ -229,10 +230,20 @@ class Option(ChildPattern):
             else:
                 argcount = 1
         if argcount:
-            matched = re.findall('\[default: (.*)\]', description, flags=re.I)
+            # matched = re.findall('\[default: (.*)\]', description, flags=re.I)
+            matched = re.findall('\[default: ([^\]]*)\]', description, flags=re.I)
             value = matched[0] if matched else None
 
-        return {'short': short, 'long': long, 'value': value, 'description': description.strip().split('\n\n', 1)[0].replace('\n', ' ').replace('  ', ''), 'type': type}
+        if description:
+            category = re.findall('\[category: ([^\]]*)\]', description, flags=re.I)
+            altprefix = re.findall('\[altprefix: ([^\]]*)\]', description, flags=re.I)
+
+        category = category[0] if category else None
+        altprefix = altprefix[0] if altprefix else None
+        description = description.strip().split('\n\n', 1)[0].replace('\n', ' ').replace('  ', '') if description else None
+
+        return {'short': short, 'long': long, 'value': value, 'category': category,
+                'altprefix': altprefix, 'description': description, 'type': type}
 
     def single_match(self, left):
         for n, p in enumerate(left):

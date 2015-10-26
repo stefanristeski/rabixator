@@ -1,38 +1,51 @@
-"""Foo bar tool
-
+"""
 Usage:
-  tool.py create (foo | bar) [-abcdf FLOAT] [--longboolean --some-int INTEGER --string STR --some-array=<integer>... --enum=<enum> --other-enum=<enum>] --input-file=<file> -x STR <arg-some_file> <arg_some-array>... [<arg-some-int> <arg-float-some> <arg-str-some>]
+    third_class_tool.py command --q1=FILE... --w2=STR [options] [--param9=STR... --param10=INT... --param11=FLOAT...]
 
-Arguments:
-  <arg-some_file>                   arg FILE output [type: file] [default: file.txt]
-  <arg-some-int>                    arg integer [type: integer]
-  <arg-float-some>                  arg FLOAT [type: float]
-  <arg-str-some>                    arg string [type: string]
-                                    second line of string decription
-  <arg_some-array>                  arg this is array of ints [type: int]
+Description:
+    This is description.
 
 Options:
-  -h --help                         show this help message and exit
-  -v, --version                     show version and exit
-  --input-file=<file>               this is input file
-  -s STR --string=STR               this is string
-  -i, --some-int INTEGER            this is int
-                                    second line of description
-  -f FLOAT, --float FLOAT           this is float [default: 10.0]
-  -b                                this is boolean
-  --longboolean                     this is longboolean
-  -a, --longa                       this is short and long a bool
-  -c                                this is short c bool
-  -d                                this is short d bool
-  --some-array=<integer>            this is list of int [default: 1 2 3]
-                                    second description line
-  --enum=<enum>                     this is enum [values: 10.1 11.1 12.1] [default: 10.1]
-  -x STR
-  --other-enum=<enum>               this is enum [default: 10] [values: 10 11 12]
+    -h, --help                      Show this help message and exit.
+
+    --version                       Show version and exit.
+
+    -q=FILE, --q1=FILE              This is array of input files which tool requires in order to work.
+
+    -w=STR, --w2=STR                This is some string, which tool also requires in order to work. [Default: output_file_path]
+
+    -p3=INT, --param3=INT           This is some int. This is third line of description.
+
+    -p4=FLOAT, --param4=FLOAT       This is float with default value. [Default: 10.0]
+
+    -p5=ENUM                        This is enum type with default value included. Possible values: {the one, two, three}.
+                                    [Default: the one]
+
+    -p6                             This is short boolean and also a boolean flag. In docopt boolean flag is False
+                                    by default, but you need to specify default value. For third class of tools advice
+                                    is to use boolean enum, and for first and second this value will be parsed.
+                                    [Default: true]
+
+    --param7                        This is long boolean and also a boolean flag. You need to specify default value.
+                                    [Default: false]
+
+    -p8 --param8=BOOL               This is boolean enum. Possible values: {true, false, null}. [Default: true]
+
+
+    --param9=STR                    This is array of strings. You need to put ... in usage pattern. [Default: x y]
+
+    --param10=INT                   This is some integers array. You need to put ... in usage pattern.
+                                    Second description line. [Default: 1 2 3]
+
+    --param11=FLOAT                 This is array of floats.
+
+Examples:
+    python tool.py command --param1=file --param2=string
 
 """
 
 from docopt import docopt
 
 if __name__ == '__main__':
-    doc = docopt(__doc__, version=1.0)
+    arguments = docopt(__doc__, version=1.0)
+    print(arguments)

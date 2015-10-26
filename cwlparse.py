@@ -1,21 +1,39 @@
 """Rabix Parser
 
 Usage:
-  cwlparse.py <tool_help_call> [--stdout=<file_name> --out=<file_name.extension>...]
-
-Options:
-  -h, --help                print this message and exit
-  -v, --version             print cwl parser version
-  --stdout=<file>           reference the output file(s)
-  --out=<file_extension>    define output file and extension
+    cwlparse.py (<tool_help_call> | --file=<file>) [--stdout=<file_name> --out=<file_name.extension>... --del_prefix=<dash>]
 
 Arguments:
-  <tool_help_call>          call tool help inside '', e.g. 'python tool_path cmd --help'
+    <tool_help_call>                Tool help call inside single quotes, e.g. 'python tool.py [cmd] --help'.
 
-Example:
-  python cwlparse.py 'python tool.py -h'
-  python cwlparse.py 'python tool.py -h' --stdout='out.bam' --out='bam.bam' --out='reports[].pdf'
+Options:
+    --file=<file>                   Path to the tool help file in txt format, e.g --file=/opt/tool/tool_help.txt.
 
+    --out=<file_name.extension>     Define output file_name and extension, where file_name is used to generate input id
+                                    and label, and extension is used to generate glob. This option could be called
+                                    multiple times, if you need to define more than one output. Output could be defined
+                                    either as single file output or array of files output. For array of files you only
+                                    need to add "[]" to the file_name.
+                                    e.g. --out='sorted_bam.bam' --out='reports[].pdf' will define two outputs.
+                                    First: Single file output sorted_bam.bam is generated with:
+                                    {id: 'sorted_bam', label: 'Sorted Bam', type: 'File', glob: '*.bam'},
+                                    Second: Array of files output reports[].pdf is generated with:
+                                    {id: 'reports', label: 'Reports', type: 'array', glob: '*.pdf'}.
+
+    --stdout=<file_name.extension>  Redirect stdout of tool to the output file, where file_name is label and id in cwl,
+                                    and extension is parsed in glob as *.extension. This option could not be called
+                                    multiple times. e.g. --stdout=aligned_bam.bam.
+
+    --del_prefix=<dash>             Delete single dash or double dash from every prefix.
+
+    -h, --help                      Print this message and exit.
+
+    -v, --version                   Print cwl parser version.
+
+Examples:
+    python cwlparse.py --file=path_to_help_file
+    python cwlparse.py 'python tool.py -h' --del_prefix='--'
+    python cwlparse.py 'python tool.py -h' --stdout='aligned_bam.bam' --out='sorted_bam.bam' --out='reports[].pdf'
 """
 
 import re
@@ -27,9 +45,15 @@ from docopt import docopt, printable_usage, parse_defaults, formal_usage
 
 
 if __name__ == '__main__':
-    args = docopt(__doc__, help=True, version=1.0)
-    base_command = args.get('<tool_help_call>').split(' ')
-    doc = check_output(base_command)
+    args = docopt(__doc__, help=True, version=0.1)
+    base_command = ''
+
+    if args.get('<tool_help_call>'):
+        base_command = args.get('<tool_help_call>').split(' ')
+        doc = check_output(base_command)
+    if args.get('--file'):
+        with open(args.get('--file'), "r") as help_file:
+            doc = help_file.read()
 
     # Load options and arguments
     doc_options, doc_args = optdoc.parse_defaults(doc)
@@ -48,10 +72,11 @@ if __name__ == '__main__':
     # print 'CMD \n' + str(cmd_list)
 
     # remove -h/--help from base_command
-    if '-h' in base_command:
-        base_command.remove('-h')
-    elif '--help' in base_command:
-        base_command.remove('--help')
+    if base_command:
+        if '-h' in base_command:
+            base_command.remove('-h')
+        elif '--help' in base_command:
+            base_command.remove('--help')
 
     # CWL shema
     rabix_schema = OrderedDict({
@@ -78,22 +103,24 @@ if __name__ == '__main__':
     })
 
     # Variable types
-    str_type = ['STRING', 'STR', '<string>', '<str>', 'str']
-    int_type = ['INTEGER', 'INT', '<integer>', '<int>', 'int']
-    float_type = ['FLOAT', '<float>', 'float']
-    file_type = ['FILE', '<file>', 'File']
-    enum_type = ['ENUM', '<enum>', 'enum']
+    str_type = ['STRING', 'STR', '<string>', '<str>', 'Str', 'str']
+    int_type = ['INTEGER', 'INT', '<integer>', '<int>', 'Int', 'int']
+    float_type = ['FLOAT', '<float>', 'float', 'Float']
+    file_type = ['FILE', '<file>', 'File', 'file']
+    enum_type = ['ENUM', '<enum>', 'ENUMERATION', '<enumeration>', 'enum', 'Enum', 'Enumeration']
+    bool_type = ['BOOLEAN', '<boolean>', 'BOOL', '<bool>', 'Bool']
 
     # Append to rabix input
     def append_input(o, list=False):
         if not isinstance(o, str):
             name = o.get('name', None)
             prefix = get_prefix(o)
-            label = prefix.lower().strip('-').replace('-', '_') if prefix else name
+            # label = prefix.lower().strip('-').replace('-', '_').title() if prefix else name
+            label = o.get('description').split('.')[0] if (prefix and o.get('description')) else name
             description = o.get('description')
             var_type = o.get('type')
             if var_type == 'boolean' and not prefix.startswith('--'):
-                label = description.replace(' ', '_')
+                label = description.split('.')[0]
             if list:
                 if var_type in str_type: var_type = ["null", {"type": "array", "items": {"type": "string"}}]
                 elif var_type in int_type: var_type = ["null", {"type": "array", "items": {"type": "int"}}]
@@ -104,26 +131,42 @@ if __name__ == '__main__':
                 elif var_type in int_type: var_type = 'int'
                 elif var_type in float_type: var_type = 'float'
                 elif var_type in file_type: var_type = 'File'
-                elif var_type in enum_type:
-                    start, end, d = '[values:', ']', description
+                elif var_type in enum_type or var_type in bool_type:
+                    start, end, d = 'values: {', '}', description
                     var_type = ["null", {"type": "enum", "name": prefix.lower().strip('-'),
-                                         "symbols": d[d.find(start)+len(start):d.find(end, d.find(start))].strip().split(' ')}]
+                                         "symbols": [e.strip() for e in d[d.find(start)+len(start):d.find(end, d.find(start))].split(',')]}]
 
+            if any(map(lambda x: x.upper() in description.upper(), ['default', 'category', 'altprefix'])):
+                description = description.split('. ')[:-1]
+                description = '. '.join(description) + '.'
+            else:
+                if not description.endswith('.'):
+                    description += '.'
+
+            # split_desc = '.'.join(split_desc)
+            # print type(split_desc)
+            # description = str('.'.join(description.split('.')[:-1]) + '.') if '.'.join(description.split('.')[:-1]) else str(description),
+            # if not description.endswith('.'):
+            #     description += '.'
             inputs = rabix_schema.get('inputs')
-
+            del_prefix = args.get('--del_prefix') if args.get('--del_prefix') in ['-', '--'] else None
             # In case o is option
             if o.get('short') or o.get('long'):
                 inputs.append(OrderedDict(
                     {
-                        "inputBinding": {"prefix": prefix, "separate": True},
+                        "inputBinding": {"prefix": prefix[len(del_prefix):] if del_prefix else prefix, "separate": True},
                         "type": var_type if 'enum' in str(var_type) or 'array' in str(var_type) else ["null", var_type],
-                        "id": ''.join(['#', prefix.lower().strip('-').replace('-', '_')]),
+                        "id": '#' + label.lower().replace(' ', '_') if not o.get('long') else
+                        ''.join(['#', prefix.lower().strip('-').replace('-', '_')]),
                         "description": description,
                         "label": label,
-                        "sbg:category": "",
+                        "sbg:altPrefix": o.get('short') if (o.get('short') and o.get('long')) else o.get('altprefix'),
+                        "sbg:toolDefaultValue": o.get('value'),
+                        "sbg:category": o.get('category') if o.get('category') else ""
                     }
                     )
                 )
+
             # In case o is argument
             elif name:
                 name = replace(name, [('<', ''), ('>', ''), ('-', '_')])
@@ -134,7 +177,9 @@ if __name__ == '__main__':
                         "id": ''.join(['#', name]),
                         "description": description,
                         "label": ''.join(['#', name]),
-                        "sbg:category": "",
+                        "sbg:altPrefix": o.get('short') if (o.get('short') and o.get('long')) else "",
+                        "sbg:toolDefaultValue": o.get('value'),
+                        "sbg:category": ""
                     }
                     )
                 )
@@ -148,6 +193,8 @@ if __name__ == '__main__':
                     "id": ''.join(['#', o]),
                     "description": ''.join(['This is ', o, ' command.', " Type it's name if you want to use it"]),
                     "label": o,
+                    "sbg:altPrefix": "",
+                    "sbg:toolDefaultValue": "",
                     "sbg:category": "",
                 }
                 )
@@ -162,6 +209,20 @@ if __name__ == '__main__':
                 "outputBinding": {"glob": ''.join(['*.', output[1]])},
                 "type": ["null", {"type": "array", "items": {"type": "File"}}] if list else ["null", "File"],
                 "id": ''.join(['#', replace(output[0].lower(), [('-', '_'), ('[', ''), (']', '')])]),
+                "label": output[0].replace('_', ' ').replace('-', ' ').title()
+            }
+        )
+        rabix_schema['outputs'] = outputs
+
+    # Append std to rabix output
+    def append_stdout(stdout):
+        outputs = rabix_schema.get('outputs')
+        outputs.append(
+            {
+                "outputBinding": {"glob": ''.join(['*.', stdout.split('.')[1]])},
+                "type": ["null", {"type": "array", "items": {"type": "File"}}] if list else ["null", "File"],
+                "id": ''.join(['#', replace(stdout.split('.')[0].lower(), [('-', '_'), ('[', ''), (']', '')])]),
+                "label": stdout.split('.')[0].replace('_', ' ').replace('-', ' ').title()
             }
         )
         rabix_schema['outputs'] = outputs
@@ -218,6 +279,7 @@ if __name__ == '__main__':
     # make std out
     if args.get('--stdout'):
         rabix_schema['stdout'] = args.get('--stdout')
+        append_stdout(args.get('--stdout'))
 
     # position inputs
     for x, id in enumerate(ids):
