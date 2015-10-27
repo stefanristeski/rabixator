@@ -38,10 +38,12 @@ def append_input(input):
         if not description.endswith('.'):
             description = ''.join([description, '.'])
 
+    item_separator = None if input.get('list') else " "
+
     inputs = rabix_schema.get('inputs')
     inputs.append(
         {
-            "inputBinding": {"prefix": prefix, "separate": True, "itemSeparator": " ",  "sbg:cmdInclude": True},
+            "inputBinding": {"prefix": prefix, "separate": True, "itemSeparator": item_separator,  "sbg:cmdInclude": True},
             "type": [input_type] if input.get('id') in required else ["null", input_type],
             "id": ''.join(['#', input.get('id')]),
             "description": description if description else "",
@@ -101,29 +103,35 @@ def append_param(param):
     if param.get('type') == 'enum' and param.get('list') is True:
         print ''.join(['\n', 'PARAM IS ENUM LIST. PLEASE ADD IT MANUALLY!',
                        ' - {id: "', param['id'], '", name: "', param['name'], '"}', '\n'])
-        param_type = {"type": "enum", "name": param.get('id'), "symbols": [v[0] for v in param.get('values')]}
+        param_type = {"type": "array", "items": {"type": "enum", "name": param.get('id'), "symbols": [v[0] for v in param.get('values')]}}
+
+    item_separator = None if input.get('list') else " "
+    category = param.get('category') if param.get('category') else ""
+    default = str(param.get('default')) if param.get('default') is not None else ""
 
     # capitalize and append '.', 'default', 'category' to description
     description = param.get('description')
+
     if description:
         description = ''.join([description[0].upper(), description[1:]])
         if not description.endswith('.'):
             description = ''.join([description, '.'])
-        if param.get('default'):
-            description = ''.join([description, ' [Default: ', ''.join(['"', param.get('default'), '"'])
-            if isinstance(param.get('default'), str) else str(param.get('default')), ']'])
-        if param.get('category'):
-            description = ''.join([description, ' [Category: ', '"', param.get('category'), '"', ']'])
+        # if param.get('default'):
+            # description = ''.join([description, ' [Default: ', ''.join(['"', param.get('default'), '"'])
+            # if isinstance(param.get('default'), str) else str(param.get('default')), ']'])
+        # if param.get('category'):
+            # description = ''.join([description, ' [Category: ', '"', param.get('category'), '"', ']'])
 
     inputs = rabix_schema.get('inputs')
     inputs.append(
         {
-            "inputBinding": {"prefix": prefix, "separate": True, "itemSeparator": " ", "sbg:cmdInclude": True},
+            "inputBinding": {"prefix": prefix, "separate": True, "itemSeparator": item_separator, "sbg:cmdInclude": True},
             "type": [param_type] if param.get('id') in required else ["null", param_type],
             "id": ''.join(['#', param.get('id')]),
             "description": description if description else "",
             "label": param.get('name'),
-            "sbg:category": "",
+            "sbg:category": category,
+            "sbg:toolDefaultValue": default,
         }
     )
     rabix_schema['inputs'] = inputs
