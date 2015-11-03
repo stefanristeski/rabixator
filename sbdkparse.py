@@ -48,7 +48,8 @@ def append_input(input):
             "id": ''.join(['#', input.get('id')]),
             "description": description if description else "",
             "label": ''.join([input.get('name')[0].upper(),  input.get('name')[1:]]) if input.get('name') else "",
-            "sbg:category": "",
+            "sbg:category": "Input Files",
+            "sbg:altPrefix": input.get('_extra').get('alt')
         }
     )
     rabix_schema['inputs'] = inputs
@@ -132,6 +133,7 @@ def append_param(param):
             "label": param.get('name'),
             "sbg:category": category,
             "sbg:toolDefaultValue": default,
+            "sbg:altPrefix": param.get('_extra').get('alt')
         }
     )
     rabix_schema['inputs'] = inputs
